@@ -41,6 +41,7 @@
 -- localizing globals is an encouraged practice that inproves code efficiency,
 -- accessing a local value is considerably faster than a global value
 local net = net
+local bit = bit
 local util = util
 local math = math
 local undo = undo
@@ -54,7 +55,10 @@ local Color = Color
 local Vector = Vector
 local IsValid = IsValid
 local language = language
+local tonumber = tonumber
 local constraint = constraint
+local concommand = concommand
+local CreateConVar = CreateConVar
 local GetConVarNumber = GetConVarNumber
 local RunConsoleCommand = RunConsoleCommand
 
@@ -724,7 +728,6 @@ function TOOL.BuildCPanel( CPanel )
 	params.Options[ "Right" ]  = { stacker_dir = "5" }
 	params.Options[ "Left" ]   = { stacker_dir = "6" }
 	CPanel:AddControl( "ComboBox", params )
-
 
 	CPanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = GetConVarNumber( "stacker_max_count" ), Command = "stacker_count", Description = "How many props to stack." } )
 
