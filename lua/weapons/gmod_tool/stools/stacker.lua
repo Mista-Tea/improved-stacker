@@ -736,5 +736,5 @@ function TOOL.BuildCPanel( CPanel )
 	CPanel:AddControl( "Checkbox", { Label = "Apply material to the stacked props",  Command = "stacker_material",  Description = "Applies the material of the original prop to all stacked props" } )
 	CPanel:AddControl( "Checkbox", { Label = "Apply color to the stacked props",     Command = "stacker_color",     Description = "Applies the color of the original prop to all stacked props" } )
 	CPanel:AddControl( "Checkbox", { Label = "Add halos to the ghost props",         Command = "stacker_halo",      Description = "Give the ghost a halo" } )
-	CPanel:AddControl( "Color", { Label = "Halo color", Red = "stacker_halo_r", Green = "stacker_halo_g", Blue = "stacker_halo_b", Alpha = "" } )
+	CPanel:AddControl( "Color", { Label = "Halo color", Red = "stacker_halo_r", Green = "stacker_halo_g", Blue = "stacker_halo_b", Alpha = "stacker_halo_a" } )
 end
