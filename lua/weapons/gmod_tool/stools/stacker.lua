@@ -11,6 +11,7 @@
 		
 	Changelog:
 		- Added to GitHub May 27th, 2014
+		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
 			- Prevents crash from players using very high P/Y/R rotate values.
@@ -32,6 +33,34 @@
 				> stacker_set_maxoffsetz #
 
 ----------------------------------------------------------------------------]]
+
+--[[--------------------------------------------------------------------------
+-- Localized Functions & Variables
+--------------------------------------------------------------------------]]--
+
+-- localizing globals is an encouraged practice that inproves code efficiency,
+-- accessing a local value is considerably faster than a global value
+local net = net
+local util = util
+local math = math
+local undo = undo
+local halo = halo
+local game = game
+local ents = ents
+local pairs = pairs 
+local table = table
+local Angle = Angle
+local Color = Color
+local Vector = Vector
+local IsValid = IsValid
+local language = language
+local constraint = constraint
+local GetConVarNumber = GetConVarNumber
+local RunConsoleCommand = RunConsoleCommand
+
+local MOVETYPE_NONE = MOVETYPE_NONE
+local SOLID_VPHYSICS = SOLID_VPHYSICS
+local RENDERMODE_TRANSALPHA = RENDERMODE_TRANSALPHA
 
 --[[--------------------------------------------------------------------------
 -- Tool Settings
@@ -73,6 +102,20 @@ if ( CLIENT ) then
 	language.Add( "Undone_stacker",    "Undone stacked prop(s)" )
 	
 end
+
+--[[--------------------------------------------------------------------------
+-- Enumerations
+--------------------------------------------------------------------------]]--
+
+local MODE_WORLD = 1 -- stacking relative to the world
+local MODE_PROP  = 2 -- stacking relative to the prop
+
+local DIRECTION_UP     = 1
+local DIRECTION_DOWN   = 2
+local DIRECTION_FRONT  = 3
+local DIRECTION_BEHIND = 4
+local DIRECTION_RIGHT  = 5
+local DIRECTION_LEFT   = 6
 
 --[[--------------------------------------------------------------------------
 -- Console Variables
@@ -150,42 +193,6 @@ elseif ( SERVER ) then
 		RunConsoleCommand( "stacker_max_offsetx", args[1] )
 	end )
 end
-	
---[[--------------------------------------------------------------------------
--- Enumerations
---------------------------------------------------------------------------]]--
-
-local MODE_WORLD = 1 -- stacking relative to the world
-local MODE_PROP  = 2 -- stacking relative to the prop
-
-local DIRECTION_UP     = 1
-local DIRECTION_DOWN   = 2
-local DIRECTION_FRONT  = 3
-local DIRECTION_BEHIND = 4
-local DIRECTION_RIGHT  = 5
-local DIRECTION_LEFT   = 6
-
---[[--------------------------------------------------------------------------
--- Localized Functions & Variables
---------------------------------------------------------------------------]]--
-
--- localizing globals is an encouraged practice that inproves code efficiency,
--- accessing a local value is considerably faster than a global value
-local util = util
-local math = math
-local undo = undo
-local halo = halo
-local game = game
-local pairs = pairs 
-local table = table
-local Angle = Angle
-local Vector = Vector
-local IsValid = IsValid
-local language = language
-
-local MOVETYPE_NONE = MOVETYPE_NONE
-local SOLID_VPHYSICS = SOLID_VPHYSICS
-local RENDERMODE_TRANSALPHA = RENDERMODE_TRANSALPHA
 
 --[[--------------------------------------------------------------------------
 -- Convenience Functions
@@ -236,7 +243,7 @@ function TOOL:GetOffsetVector() return Vector( self:GetOffsetX(), self:GetOffset
 --]]--
 function TOOL:GetRotateP() return math.Clamp( self:GetClientNumber( "rotp" ), -360, 360 ) end
 function TOOL:GetRotateY() return math.Clamp( self:GetClientNumber( "roty" ), -360, 360 ) end
-function TOOL:GetRotateR() return math.Clamp( self:GetClientNumber( "rotz" ), -360, 360 ) end
+function TOOL:GetRotateR() return math.Clamp( self:GetClientNumber( "rotr" ), -360, 360 ) end
 
 function TOOL:GetRotateAngle() return Angle( self:GetRotateP(), self:GetRotateY(), self:GetRotateR() ) end
 
