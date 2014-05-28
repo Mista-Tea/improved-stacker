@@ -106,7 +106,7 @@ if ( CLIENT ) then
 	concommand.Add( "stacker_resetoffsets", ResetOffsets )
 	
 elseif ( SERVER ) then
-	
+
 	local function ValidateCommand( ply, arg )
 		if ( IsValid( ply ) and !ply:IsAdmin() ) then return false end
 		local count = tonumber( arg )
@@ -114,38 +114,41 @@ elseif ( SERVER ) then
 		return true
 	end
 	
-	concommand.Add( "stacker_set_maxcount", function( ply, cmd, args )
+	concommand.Add( "stacker_set_maxcount", function( ply, cmd, args )		
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
-		RunConsoleCommand( "stacker_max_count", count )
-	end, nil, "Sets the max amount of props that can be stacked at one time", FCVAR_CLIENTCMD_CAN_EXECUTE )
+		RunConsoleCommand( "stacker_max_count", args[1] )
+	end )
 
 	concommand.Add( "stacker_set_maxoffset", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
-		RunConsoleCommand( "stacker_max_offsetx", count )
-		RunConsoleCommand( "stacker_max_offsety", count )
-		RunConsoleCommand( "stacker_max_offsetz", count )
-	end, nil, "Sets the max distance that stacked props can be offset in the xyz planes", FCVAR_CLIENTCMD_CAN_EXECUTE )
+		RunConsoleCommand( "stacker_max_offsetx", args[1] )
+		RunConsoleCommand( "stacker_max_offsety", args[1] )
+		RunConsoleCommand( "stacker_max_offsetz", args[1] )
+	end )
 
 	concommand.Add( "stacker_set_maxoffsetx", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
-		RunConsoleCommand( "stacker_max_offsetx", count )
-	end, nil, "Sets the max distance that stacked props can be offset on the x plane", FCVAR_CLIENTCMD_CAN_EXECUTE )
+		RunConsoleCommand( "stacker_max_offsetx", args[1] )
+	end )
 
 	concommand.Add( "stacker_set_maxoffsety", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
-		RunConsoleCommand( "stacker_max_offsety", count )
-	end, nil, "Sets the max distance that stacked props can be offset on the y plane", FCVAR_CLIENTCMD_CAN_EXECUTE )
+		RunConsoleCommand( "stacker_max_offsety", args[1] )
+	end )
 
 	concommand.Add( "stacker_set_maxoffsetz", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
-		RunConsoleCommand( "stacker_max_offsetz", count )
-	end, nil, "Sets the max distance that stacked props can be offset on the z plane", FCVAR_CLIENTCMD_CAN_EXECUTE )
+		RunConsoleCommand( "stacker_max_offsetz", args[1] )
+	end )
 	
+	concommand.Add( "test", function( ply, cmd, args )
+		RunConsoleCommand( "stacker_max_offsetx", args[1] )
+	end )
 end
 	
 --[[--------------------------------------------------------------------------
