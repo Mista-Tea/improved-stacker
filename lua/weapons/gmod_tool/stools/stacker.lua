@@ -1,5 +1,5 @@
 --[[--------------------------------------------------------------------------
-	Stacker Tool
+	Improved Stacker
 	
 	File name:
 		stacker.lua
@@ -11,26 +11,30 @@
 		
 	Changelog:
 		- Added to GitHub May 27th, 2014
+		- Added to Workshop May 28th, 2014
 		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
 			- Prevents crash from players using very high P/Y/R rotate values.
 			- Fixed the halo option for ghosted props not working.
+
 		Tweaks:
-			- Added convenience functions to retrieve the client convars.
+			- Added console variables for server operators to limit various parts of stacker via server console:
+				> stacker_max_count # (the maximum amount of props that can be stacked at one time)
+				> stacker_max_offsetx # (the maximum distance stacked props can be offset on the x plane)
+				> stacker_max_offsety # (the maximum distance stacked props can be offset on the y plane)
+				> stacker_max_offsetz # (the maximum distance stacked props can be offset on the z plane)
+
+			- Added concommands that allow server admins to change the above cvars without access to server console:
+				> stacker_set_maxcount # (same as above)
+				> stacker_set_maxoffsetx # (same as above)
+				> stacker_set_maxoffsety # (same as above)
+				> stacker_set_maxoffsetz # (same as above)
+				> stacker_set_maxoffset # (sets the max offset for the xyz planes, grouped instead of individually)
+
 			- Added option to enable/disable automatically applying materials to the stacked props.
 			- Added option to enable/disable automatically applying colors to the stacked props.
-			- Added console variables for server operators to limit various parts of stacker.
-				> stacker_max_count
-				> stacker_max_offsetx
-				> stacker_max_offsety
-				> stacker_max_offsetz
-			- Added console commands for server admins to control the console variables that limit stacker.
-				> stacker_set_maxcount #
-				> stacker_set_maxoffset #
-				> stacker_set_maxoffsetx #
-				> stacker_set_maxoffsety #
-				> stacker_set_maxoffsetz #
+			- Added color chooser to change the color the halo used on stacked props.
 
 ----------------------------------------------------------------------------]]
 
