@@ -1,0 +1,48 @@
+"AddonInfo"
+{
+	"name" "Improved Stacker"
+	"author_name" "Original - OverloadUT, Edited by - Marii, Edited by - Mista Tea"
+	"info" "Mista Tea's version (this one)
+			Cleaned, organized, and optimized code. 
+			
+			Fixes:
+				- Prevents crash from players using very high X/Y/Z offset values.
+				- Prevents crash from players using very high P/Y/R rotate values.
+				- Fixed the halo option for ghosted props not working.
+			Tweaks:
+				- Added convenience functions to retrieve the client convars.
+				- Added option to enable/disable automatically applying materials to the stacked props.
+				- Added option to enable/disable automatically applying colors to the stacked props.
+				- Added console variables for server operators to limit various parts of stacker.
+					> stacker_max_count
+					> stacker_max_offsetx
+					> stacker_max_offsety
+					> stacker_max_offsetz
+				- Added console commands for server admins to control the console variables that limit stacker.
+					> stacker_set_maxcount #
+					> stacker_set_maxoffset #
+					> stacker_set_maxoffsetx #
+					> stacker_set_maxoffsety #
+					> stacker_set_maxoffsetz #
+				
+					
+		Marii's version (the one this is based on): http://www.steamcommunity.com/sharedfiles/filedetails/?id=104479831
+			Fixed for GM13, with other minor tweaks, by me. Not originally my work.
+			
+			Fixes: 
+				- Fixes ghosting errors. 
+				- Fix InWorld() check. 
+				- Fix bug with checking if prop is valid. 
+				- Fix check to see if count is less then or zero.  
+			Tweaks: 
+				- Allows mass unfreezing of stacked props with physgun. 
+				- Allows full ghosting of props (Shows entire stack). 
+				- Ghosts can have halos! 
+				- Tweak menu values and sliders to be ALOT more useful. 
+				- Add Ghost All option.  
+				
+			Todo: 
+				Clean ALL of the code!
+				
+			GM12 Version (reupped by: sYcore, original author: OverlordUT): http://www.garrysmod.org/downloads/?a=view&id=64848"
+}
