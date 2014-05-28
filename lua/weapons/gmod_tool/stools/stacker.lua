@@ -10,7 +10,26 @@
 		Cleaned and optimized - Mista Tea
 		
 	Changelog:
-		- Edited May 27th, 2014
+		- Added to GitHub May 27th, 2014
+		Fixes:
+			- Prevents crash from players using very high X/Y/Z offset values.
+			- Prevents crash from players using very high P/Y/R rotate values.
+			- Fixed the halo option for ghosted props not working.
+		Tweaks:
+			- Added convenience functions to retrieve the client convars.
+			- Added option to enable/disable automatically applying materials to the stacked props.
+			- Added option to enable/disable automatically applying colors to the stacked props.
+			- Added console variables for server operators to limit various parts of stacker.
+				> stacker_max_count
+				> stacker_max_offsetx
+				> stacker_max_offsety
+				> stacker_max_offsetz
+			- Added console commands for server admins to control the console variables that limit stacker.
+				> stacker_set_maxcount #
+				> stacker_set_maxoffset #
+				> stacker_set_maxoffsetx #
+				> stacker_set_maxoffsety #
+				> stacker_set_maxoffsetz #
 
 ----------------------------------------------------------------------------]]
 
