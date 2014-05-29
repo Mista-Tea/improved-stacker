@@ -196,9 +196,6 @@ elseif ( SERVER ) then
 		RunConsoleCommand( "stacker_max_offsetz", args[1] )
 	end )
 	
-	concommand.Add( "test", function( ply, cmd, args )
-		RunConsoleCommand( "stacker_max_offsetx", args[1] )
-	end )
 end
 
 --[[--------------------------------------------------------------------------
