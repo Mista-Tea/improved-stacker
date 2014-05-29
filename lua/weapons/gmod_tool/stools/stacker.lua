@@ -21,6 +21,8 @@
 			- Added convenience functions to retrieve the client convars.
 			- Added option to enable/disable automatically applying materials to the stacked props.
 			- Added option to enable/disable automatically applying colors to the stacked props.
+			- Added support for props with multiple skins.
+			
 			- Added console variables for server operators to limit various parts of stacker.
 				> stacker_max_count
 				> stacker_max_offsetx
