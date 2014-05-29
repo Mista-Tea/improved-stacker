@@ -1,5 +1,5 @@
 --[[--------------------------------------------------------------------------
-	Improved Stacker
+	Stacker Tool
 	
 	File name:
 		stacker.lua
@@ -17,24 +17,21 @@
 			- Prevents crash from players using very high X/Y/Z offset values.
 			- Prevents crash from players using very high P/Y/R rotate values.
 			- Fixed the halo option for ghosted props not working.
-
 		Tweaks:
-			- Added console variables for server operators to limit various parts of stacker via server console:
-				> stacker_max_count # (the maximum amount of props that can be stacked at one time)
-				> stacker_max_offsetx # (the maximum distance stacked props can be offset on the x plane)
-				> stacker_max_offsety # (the maximum distance stacked props can be offset on the y plane)
-				> stacker_max_offsetz # (the maximum distance stacked props can be offset on the z plane)
-
-			- Added concommands that allow server admins to change the above cvars without access to server console:
-				> stacker_set_maxcount # (same as above)
-				> stacker_set_maxoffsetx # (same as above)
-				> stacker_set_maxoffsety # (same as above)
-				> stacker_set_maxoffsetz # (same as above)
-				> stacker_set_maxoffset # (sets the max offset for the xyz planes, grouped instead of individually)
-
+			- Added convenience functions to retrieve the client convars.
 			- Added option to enable/disable automatically applying materials to the stacked props.
 			- Added option to enable/disable automatically applying colors to the stacked props.
-			- Added color chooser to change the color the halo used on stacked props.
+			- Added console variables for server operators to limit various parts of stacker.
+				> stacker_max_count
+				> stacker_max_offsetx
+				> stacker_max_offsety
+				> stacker_max_offsetz
+			- Added console commands for server admins to control the console variables that limit stacker.
+				> stacker_set_maxcount #
+				> stacker_set_maxoffset #
+				> stacker_set_maxoffsetx #
+				> stacker_set_maxoffsety #
+				> stacker_set_maxoffsetz #
 
 ----------------------------------------------------------------------------]]
 
@@ -396,10 +393,11 @@ function TOOL:LeftClick( trace )
 	local ply = self:GetOwner()
 	local ent = trace.Entity
 
-	local entPos = ent:GetPos()
-	local entAng = ent:GetAngles()
-	local entMat = ent:GetMaterial()
-	local entCol = ent:GetColor()
+	local entPos  = ent:GetPos()
+	local entAng  = ent:GetAngles()
+	local entSkin = ent:GetSkin()
+	local entMat  = ent:GetMaterial()
+	local entCol  = ent:GetColor()
 	
 	local lastEnt = ent
 	local newEnt
@@ -423,6 +421,7 @@ function TOOL:LeftClick( trace )
 		newEnt:SetModel( ent:GetModel() )
 		newEnt:SetPos( entPos )
 		newEnt:SetAngles( entAng )
+		newEnt:SetSkin( entSkin )
 		if ( applyMaterial ) then newEnt:SetMaterial( entMat ) end
 		if ( applyColor )    then newEnt:SetColor( entCol )    end
 		newEnt:Spawn()
@@ -591,9 +590,11 @@ function TOOL:CreateGhostStack( ent, pos, ang )
 	local applyMaterial = self:ShouldApplyMaterial()
 	local applyColor    = self:ShouldApplyColor()
 	
-	local entMod = ent:GetModel()
-	local entMat = ent:GetMaterial() or ""
-	local entCol = ent:GetColor() or TRANSPARENT
+	local entMod  = ent:GetModel()
+	local entSkin = ent:GetSkin()
+	local entMat  = ent:GetMaterial() or ""
+	local entCol  = ent:GetColor() or TRANSPARENT
+	
 	entCol.a = 150
 	
 	if ( !ghostAll and count ~= 0 ) then
@@ -617,6 +618,7 @@ function TOOL:CreateGhostStack( ent, pos, ang )
 		ghost:SetMoveType( MOVETYPE_NONE )
 		ghost:SetRenderMode( RENDERMODE_TRANSALPHA )
 		ghost:SetNotSolid( true )
+		ghost:SetSkin( entSkin )
 		ghost:SetMaterial( ( applyMaterial and entMat ) or "" )
 		ghost:SetColor( ( applyColor and entCol ) or TRANSPARENT )
 		
@@ -686,7 +688,7 @@ function TOOL:Think()
 			self:ReleaseGhostStack()
 			self.LastEnt = nil
 		end
-	elseif ( ( traceValid and trace.Entity:GetClass() ~= "prop_physics" and self.LastEnt ~= nil ) or !traceValid ) then
+	else
 		self:ReleaseGhostStack()
 		self.LastEnt = nil
 	end
