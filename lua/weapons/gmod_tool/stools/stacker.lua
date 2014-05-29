@@ -1,5 +1,5 @@
 --[[--------------------------------------------------------------------------
-	Stacker Tool
+	Improved Stacker
 	
 	File name:
 		stacker.lua
