@@ -475,29 +475,24 @@ local CALC_POS = {
 	},
 }
 
-local VECX = Vector( 1, 0, 0 )
+local ANGX = Vector( 1, 0, 0 ):Angle()
 local VECZ = Vector( 0, 0, 1 )
 
 function TOOL:StackerCalcPos( ent, mode, dir, offset )
-	local forward = VECX:Angle()
-	local entAng = ent:GetAngles()
+	local forward  = ANGX
+	local stackdir = VECZ
+	local entAng   = ent:GetAngles()
 
-	local lower  = ent:WorldSpaceAABB()
-	local upper  = ent:WorldSpaceAABB()
+	local lower, upper = ent:WorldSpaceAABB()
 	local glower = ent:OBBMins()
 	local gupper = ent:OBBMaxs()
 	
-	local stackdir = VECZ
 	local height = math.abs( upper.z - lower.z )
 	
 	if ( mode == MODE_WORLD ) then -- get the position relative to the world's directions
-	
 		stackdir, height = CALC_POS[ mode ][ dir ]( forward, upper, lower )
-		
 	elseif ( mode == MODE_PROP ) then -- get the position relative to the prop's directions
-	
 		stackdir, height, offset = CALC_POS[ mode ][ dir ]( entAng, offset, gupper, glower )
-		
 	end
 	
 	return stackdir, height, offset
