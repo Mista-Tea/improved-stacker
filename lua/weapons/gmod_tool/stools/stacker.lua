@@ -393,7 +393,7 @@ function TOOL:AddHalos()
 	hook.Add( "PreDrawHalos", "stacker.predrawhalos", function()
 		if ( !IsValid( LocalPlayer() ) ) then return end
 		if ( !LocalPlayer():Alive() ) then return end
-		if ( !game.SinglePlayer() and !IsValid( self:GetOwner() ) ) then return end
+		if ( !IsValid( self:GetSWEP() ) ) then return end
 		if ( !self:ShouldAddHalos() ) then return end
 		
 		local ghoststack = GetGhostStack()
