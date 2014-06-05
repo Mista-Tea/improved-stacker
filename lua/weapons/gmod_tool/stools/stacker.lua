@@ -12,6 +12,7 @@
 	Changelog:
 		- Added to GitHub May 27th, 2014
 		- Added to Workshop May 28th, 2014
+		- Massive overhaul June 5th, 2014
 		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
@@ -25,12 +26,14 @@
 			- Added option to enable/disable automatically applying colors to the stacked props.
 			- Added option to enable/disable automatically applying physical properties (gravity, physics material, weight) to the stacked props.
 			- Added support for props with multiple skins.
+			- Added support for external prop protections/anti-spam addons with the StackerEntity hook.
 			
 			- Added console variables for server operators to limit various parts of stacker.
 				> stacker_max_count
 				> stacker_max_offsetx
 				> stacker_max_offsety
 				> stacker_max_offsetz
+				
 			- Added console commands for server admins to control the console variables that limit stacker.
 				> stacker_set_maxcount #
 				> stacker_set_maxoffset #
