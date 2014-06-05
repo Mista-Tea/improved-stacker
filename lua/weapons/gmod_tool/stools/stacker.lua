@@ -17,10 +17,13 @@
 			- Prevents crash from players using very high X/Y/Z offset values.
 			- Prevents crash from players using very high P/Y/R rotate values.
 			- Fixed the halo option for ghosted props not working.
+			- Fixed massive FPS drop from halos being rendered in a Think hook instead of a PreDrawHalos hooks.
+			
 		Tweaks:
 			- Added convenience functions to retrieve the client convars.
 			- Added option to enable/disable automatically applying materials to the stacked props.
 			- Added option to enable/disable automatically applying colors to the stacked props.
+			- Added option to enable/disable automatically applying physical properties (gravity, physics material, weight) to the stacked props.
 			- Added support for props with multiple skins.
 			
 			- Added console variables for server operators to limit various parts of stacker.
@@ -43,7 +46,6 @@
 
 -- localizing globals is an encouraged practice that inproves code efficiency,
 -- accessing a local value is considerably faster than a global value
-local net = net
 local bit = bit
 local util = util
 local math = math
@@ -61,6 +63,7 @@ local language = language
 local tonumber = tonumber
 local constraint = constraint
 local concommand = concommand
+local LocalPlayer = LocalPlayer
 local CreateConVar = CreateConVar
 local GetConVarNumber = GetConVarNumber
 local RunConsoleCommand = RunConsoleCommand
@@ -86,6 +89,7 @@ TOOL.ClientConVar[ "weld" ]      = "1"
 TOOL.ClientConVar[ "nocollide" ] = "1"
 TOOL.ClientConVar[ "ghostall" ]  = "1"
 TOOL.ClientConVar[ "material" ]  = "1"
+TOOL.ClientConVar[ "physprop" ]  = "1"
 TOOL.ClientConVar[ "color" ]     = "1"
 TOOL.ClientConVar[ "model" ]     = ""
 TOOL.ClientConVar[ "offsetx" ]   = "0"
@@ -124,6 +128,11 @@ local DIRECTION_BEHIND = 4
 local DIRECTION_RIGHT  = 5
 local DIRECTION_LEFT   = 6
 
+local VECTOR_ZERO = Vector( 0, 0, 0 )
+local ANGLE_ZERO  = Angle( 0, 0, 0 )
+
+local GhostStack = {}
+
 --[[--------------------------------------------------------------------------
 -- Console Variables
 --------------------------------------------------------------------------]]--
@@ -141,17 +150,18 @@ if ( CLIENT ) then
 	
 	local function ResetOffsets( ply, command, arguments )
 		-- Reset all of the offset options to 0
-		LocalPlayer():ConCommand( "stacker_offsetx 0\n" )
-		LocalPlayer():ConCommand( "stacker_offsety 0\n" )
-		LocalPlayer():ConCommand( "stacker_offsetz 0\n" )
-		LocalPlayer():ConCommand( "stacker_rotp 0\n" )
-		LocalPlayer():ConCommand( "stacker_roty 0\n" )
-		LocalPlayer():ConCommand( "stacker_rotr 0\n" )
-		LocalPlayer():ConCommand( "stacker_recalc 1\n" )
-		LocalPlayer():ConCommand( "stacker_ghostall 1\n" )
-		LocalPlayer():ConCommand( "stacker_material 1\n" )
-		LocalPlayer():ConCommand( "stacker_color 1\n" )
-		LocalPlayer():ConCommand( "stacker_halo 1\n" )
+		LocalPlayer():ConCommand( "stacker_offsetx 0" )
+		LocalPlayer():ConCommand( "stacker_offsety 0" )
+		LocalPlayer():ConCommand( "stacker_offsetz 0" )
+		LocalPlayer():ConCommand( "stacker_rotp 0" )
+		LocalPlayer():ConCommand( "stacker_roty 0" )
+		LocalPlayer():ConCommand( "stacker_rotr 0" )
+		LocalPlayer():ConCommand( "stacker_recalc 1" )
+		LocalPlayer():ConCommand( "stacker_ghostall 1" )
+		LocalPlayer():ConCommand( "stacker_material 1" )
+		LocalPlayer():ConCommand( "stacker_color 1" )
+		LocalPlayer():ConCommand( "stacker_physprop 1" )
+		LocalPlayer():ConCommand( "stacker_halo 1" )
 	end
 	concommand.Add( "stacker_resetoffsets", ResetOffsets )
 	
@@ -198,9 +208,19 @@ elseif ( SERVER ) then
 	
 end
 
+
+
 --[[--------------------------------------------------------------------------
 -- Convenience Functions
 --------------------------------------------------------------------------]]--
+
+--[[--------------------------------------------------------------------------
+-- 	GetGhostStack(), SetGhostStack( table )
+--
+--	Gets and sets the table of ghosted props in the stack.
+--]]--
+local function GetGhostStack() return GhostStack end
+local function SetGhostStack( tbl ) GhostStack = tbl end
 
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetCount()
@@ -252,32 +272,23 @@ function TOOL:GetRotateR() return math.Clamp( self:GetClientNumber( "rotr" ), -3
 function TOOL:GetRotateAngle() return Angle( self:GetRotateP(), self:GetRotateY(), self:GetRotateR() ) end
 
 --[[--------------------------------------------------------------------------
--- 	TOOL:GetGhostStack(), TOOL:SetGhostStack( table )
---
---	Gets and sets the table of ghosted props in the stack.
---]]--
-function TOOL:GetGhostStack() return self.GhostStack end
-
-function TOOL:SetGhostStack( tbl ) self.GhostStack = tbl end
-
---[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldFreeze()
 --
 --	Returns true if the stacked props should be spawned frozen.
 --]]--
-function TOOL:ShouldFreeze() return self:GetClientNumber( "freeze" ) == 1 end
+function TOOL:ShouldApplyFreeze() return self:GetClientNumber( "freeze" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldWeld()
 --
 --	Returns true if the stacked props should be welded together.
 --]]--
-function TOOL:ShouldWeld() return self:GetClientNumber( "weld" ) == 1 end
+function TOOL:ShouldApplyWeld() return self:GetClientNumber( "weld" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldNoCollide()
 --
 --	Returns true if the stacked props should be nocollided with each other.
 --]]--
-function TOOL:ShouldNoCollide() return self:GetClientNumber( "nocollide" ) == 1 end
+function TOOL:ShouldApplyNoCollide() return self:GetClientNumber( "nocollide" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldStackRelative()
 --
@@ -324,6 +335,15 @@ function TOOL:ShouldApplyMaterial() return self:GetClientNumber( "material" ) ==
 --]]--
 function TOOL:ShouldApplyColor() return self:GetClientNumber( "color" ) == 1 end
 
+--[[--------------------------------------------------------------------------
+-- 	TOOL:ShouldApplyPhysicalProperties()
+--
+--	Returns true if the stacked props should have the original prop's physicsl properties
+--	applied, including gravity, physics material, and weight.
+--]]--
+function TOOL:ShouldApplyPhysicalProperties() return self:GetClientNumber( "physprop" ) == 1 end
+
+
 
 --[[--------------------------------------------------------------------------
 -- Tool Functions
@@ -343,23 +363,41 @@ end
 --
 -- 	TOOL:Init()
 --
---	Creates two net message receivers on the client that control the stack
---	of ghosted props.
+--	Called when a player initializes in the server (probably InitPostEntity).
+--	This is called only once and only during that time, meaning reloading this
+--	file will not call TOOL:Init() again.
+--
+--	Since using hooks in STools is rather awkward when the hook function must use
+--	this tool's function, loading hooked functions here ensures that we can use
+--	'self' to refer to this tool object even after the TOOL global table has been made nil.
 --]]--
-function TOOL:Init()
-	if ( SERVER ) then	
-		util.AddNetworkString( "Stacker.StackGhost" )
-		util.AddNetworkString( "Stacker.UnstackGhost" )	
-	elseif ( CLIENT ) then
-		net.Receive( "Stacker.StackGhost", function( bits )
-			self:SetGhostStack( net.ReadTable() )
-		end )
-
-		net.Receive( "Stacker.UnstackGhost", function( bits )
-			if ( !self:GetGhostStack() ) then return end
-			table.Empty( self:GetGhostStack() )
-		end )		
+function TOOL:Init()	
+	if ( CLIENT ) then
+		self:AddHalos()
 	end
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:AddHalos()
+--
+--	Loads the hook that draws halos on the ghosted entities in the stack. 
+--
+--	THIS is the appropriate hook to create halos, NOT TOOL:Think()! The latter 
+--	will be called way more than it needs to be and causes horrible FPS drop in singleplayer.
+--]]--
+function TOOL:AddHalos()
+	hook.Add( "PreDrawHalos", "stacker.predrawhalos", function()
+		if ( !IsValid( LocalPlayer() ) ) then return end
+		if ( !LocalPlayer():Alive() ) then return end
+		if ( !game.SinglePlayer() and !IsValid( self:GetOwner() ) ) then return end
+		if ( !self:ShouldAddHalos() ) then return end
+		
+		local ghoststack = GetGhostStack()
+		if ( !ghoststack or #ghoststack <= 0 ) then return end
+
+		halo.Add( ghoststack, self:GetHaloColor() )
+	end )
 end
 
 --[[--------------------------------------------------------------------------
@@ -371,23 +409,16 @@ end
 function TOOL:LeftClick( trace )
 	if ( !IsValid( trace.Entity ) or trace.Entity:GetClass() ~= "prop_physics" ) then return false end
 	if ( CLIENT ) then return true end
-	
+
 	local count = self:GetCount()
-	
 	if ( count <= 0 ) then return false end
 
-	local dir       = self:GetDirection()
-	local mode      = self:GetStackerMode()
-	local offset    = self:GetOffsetVector()
-	local rotate    = self:GetRotateAngle()
-	
-	local applyFreeze    = self:ShouldFreeze()
-	local applyWeld      = self:ShouldWeld()
-	local applyNoCollide = self:ShouldNoCollide()
-	local stackRelative  = self:ShouldStackRelative()
-	
-	local applyMaterial  = self:ShouldApplyMaterial()
-	local applyColor     = self:ShouldApplyColor()
+	local dir    = self:GetDirection()
+	local mode   = self:GetStackerMode()
+	local offset = self:GetOffsetVector()
+	local rotate = self:GetRotateAngle()
+
+	local stackRelative = self:ShouldStackRelative()
 
 	local ply = self:GetOwner()
 	local ent = trace.Entity
@@ -398,6 +429,8 @@ function TOOL:LeftClick( trace )
 	local entMat  = ent:GetMaterial()
 	local entCol  = ent:GetColor()
 	
+	local physMat  = ent:GetPhysicsObject():GetMaterial()
+	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
 	local lastEnt = ent
 	local newEnt
 	
@@ -415,25 +448,24 @@ function TOOL:LeftClick( trace )
 
 		newEnt = ents.Create( "prop_physics" )
 		
-		newEnt["IsFromStacker"] = true -- this is for external prop protections or anti-spam addons
+		-- this hook is for external prop protections and anti-spam addons
+		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
+		-- remove or mark this entity so that those same functions (if overridden) can
+		-- detect that the entity came from Stacker
+		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil ) then continue end
 		
 		newEnt:SetModel( ent:GetModel() )
 		newEnt:SetPos( entPos )
 		newEnt:SetAngles( entAng )
 		newEnt:SetSkin( entSkin )
-		if ( applyMaterial ) then newEnt:SetMaterial( entMat ) end
-		if ( applyColor )    then newEnt:SetColor( entCol )    end
 		newEnt:Spawn()
-		
-		if ( applyFreeze ) then
-			--ply:AddFrozenPhysicsObject( newEnt, newEnt:GetPhysicsObject() ) -- fix so you can mass-unfreeze
-			newEnt:GetPhysicsObject():EnableMotion( false )
-		else
-			newEnt:GetPhysicsObject():Wake()
-		end
 
-		if ( applyWeld )      then undo.AddEntity( constraint.Weld( lastEnt, newEnt, 0, 0, 0 ) ) end
-		if ( applyNoCollide ) then undo.AddEntity( constraint.NoCollide( lastEnt, newEnt, 0, 0 ) ) end
+		self:ApplyMaterial( newEnt, entMat )
+		self:ApplyColor( newEnt, entCol )
+		self:ApplyFreeze( ply, newEnt )
+		self:ApplyWeld( lastEnt, newEnt )
+		self:ApplyNoCollide( lastEnt, newEnt )
+		self:ApplyPhysicalProperties( ent, newEnt, trace.PhysicsBone, { GravityToggle = physGrav, Material = physMat } )
 		
 		lastEnt = newEnt
 		
@@ -446,6 +478,80 @@ function TOOL:LeftClick( trace )
 	undo.Finish()
 
 	return true
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:ApplyMaterial( entity, string )
+--
+--	Attempts to apply the original entity's material onto the stacked props.
+--]]--
+function TOOL:ApplyMaterial( ent, material )
+	if ( !self:ShouldApplyMaterial() ) then ent:SetMaterial( "" ) return end
+	ent:SetMaterial( material )
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:ApplyColor( entity, color )
+--
+--	Attempts to apply the original entity's color onto the stacked props.
+--]]--
+function TOOL:ApplyColor( ent, color )
+	if ( !self:ShouldApplyColor() ) then return end
+	ent:SetColor( color )
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:ApplyFreeze( player, entity )
+--
+--	Attempts to spawn the stacked props frozen in place. If not, spawn them unfrozen.
+--]]--
+function TOOL:ApplyFreeze( ply, ent )
+	if ( self:ShouldApplyFreeze() ) then
+			ply:AddFrozenPhysicsObject( ent, ent:GetPhysicsObject() )
+			ent:GetPhysicsObject():EnableMotion( false )
+	else
+		ent:GetPhysicsObject():Wake()
+	end
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:ApplyWeld( entity, entity )
+--
+--	Attempts to weld the new entity to the last entity
+--]]--
+function TOOL:ApplyWeld( lastEnt, newEnt )
+	if ( !self:ShouldApplyWeld() ) then return end
+	undo.AddEntity( constraint.Weld( lastEnt, newEnt, 0, 0, 0 ) )
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:ApplyNoCollide( entity, entity )
+--
+--	Attempts to nocollide the new entity with the last entity.
+--]]--
+function TOOL:ApplyNoCollide( lastEnt, newEnt )
+	if ( !self:ShouldApplyNoCollide() ) then return end
+	undo.AddEntity( constraint.NoCollide( lastEnt, newEnt, 0, 0 ) )
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:ApplyPhysicalProperties( entity, entity, number, table )
+--
+--	Attempts to apply the original entity's Gravity/Physics Material properties 
+--	and weight onto the stacked propa.
+--	
+--]]--
+function TOOL:ApplyPhysicalProperties( original, newEnt, boneID, properties )
+	if ( !self:ShouldApplyPhysicalProperties() ) then return end
+	
+	if ( boneID ) then construct.SetPhysProp( _, newEnt, boneID, _, properties ) end
+	newEnt:GetPhysicsObject():SetMass( original:GetPhysicsObject():GetMass() )
 end
 
 --[[--------------------------------------------------------------------------
@@ -475,88 +581,17 @@ local CALC_POS = {
 	},
 }
 
-local ANGX = Vector( 1, 0, 0 ):Angle()
-local VECZ = Vector( 0, 0, 1 )
-
 function TOOL:StackerCalcPos( ent, mode, dir, offset )
-	local forward  = ANGX
-	local stackdir = VECZ
-	local entAng   = ent:GetAngles()
-
 	local lower, upper = ent:WorldSpaceAABB()
-	local glower = ent:OBBMins()
-	local gupper = ent:OBBMaxs()
-	
-	local height = math.abs( upper.z - lower.z )
+	local height, direction
 	
 	if ( mode == MODE_WORLD ) then -- get the position relative to the world's directions
-		stackdir, height = CALC_POS[ mode ][ dir ]( forward, upper, lower )
+		direction, height = CALC_POS[ mode ][ dir ]( ANGLE_ZERO, upper, lower )
 	elseif ( mode == MODE_PROP ) then -- get the position relative to the prop's directions
-		stackdir, height, offset = CALC_POS[ mode ][ dir ]( entAng, offset, gupper, glower )
+		direction, height, offset = CALC_POS[ mode ][ dir ]( ent:GetAngles(), offset, ent:OBBMaxs(), ent:OBBMins() )
 	end
 	
-	return stackdir, height, offset
-end
-
---[[--------------------------------------------------------------------------
---
--- 	TOOL:UpdateGhostStack( entity )
---
---	Attempts to update the positions and angles of all ghosted props in the stack.
---]]--
-function TOOL:UpdateGhostStack( ent )
-	if ( !IsValid( ent ) or !self:CheckGhostStack() ) then return end
-	
-	local count 	= self:GetCount()
-	local mode	= self:GetStackerMode()
-	local dir	= self:GetDirection()
-	local offset	= self:GetOffsetVector()
-	local rotate	= self:GetRotateAngle()
-	local recalc	= self:ShouldStackRelative()
-
-	local newEnt = ent
-	local entPos = newEnt:GetPos()
-	local entAng = newEnt:GetAngles()
-	
-	local stackdir, height, thisoffset
-	
-	for k,v in pairs( self:GetGhostStack() ) do
-		if ( k == 1 or ( mode == MODE_PROP and recalc ) ) then
-			stackdir, height, thisoffset = self:StackerCalcPos( newEnt, mode, dir, offset )
-		end
-
-		entPos = entPos + stackdir * height + thisoffset
-		entAng = entAng + rotate
-
-		v:SetAngles( entAng )
-		v:SetPos( entPos )
-		v:SetNoDraw( false )
-		newEnt = v
-	end
-end
-
---[[--------------------------------------------------------------------------
---
--- 	TOOL:CheckGhostStack()
---
---	Attempts to validate the status of the ghosted props in the stack.
---]]--
-function TOOL:CheckGhostStack()
-	local ghoststack = self:GetGhostStack()
-	if ( !ghoststack ) then return false end
-	
-	local count = self:GetCount()
-	local ghostAll = self:ShouldGhostAll()
-	
-	for k, v in pairs( ghoststack ) do
-		if ( !IsValid( v ) ) then
-			return false
-		end
-	end
-	
-	if     ( #ghoststack ~= count and ghostAll )  then return false
-	elseif ( #ghoststack ~= 1     and !ghostAll ) then return false end
-	return true
+	return direction, height, offset
 end
 
 --[[--------------------------------------------------------------------------
@@ -570,62 +605,37 @@ end
 --]]--
 local TRANSPARENT = Color( 255, 255, 255, 150 )
 
-function TOOL:CreateGhostStack( ent, pos, ang )
-	if ( self:GetGhostStack() ) then self:ReleaseGhostStack() end
-	local ghoststack = {}
+function TOOL:CreateGhostStack( ent )
+	if ( GetGhostStack() ) then self:ReleaseGhostStack() end
 
-	if ( SERVER and !game.SinglePlayer() ) then return false; end
-	if ( CLIENT and game.SinglePlayer() )  then return false; end
-	
-	local count         = self:GetCount()
-	local addHalos      = self:ShouldAddHalos()
-	local ghostAll      = self:ShouldGhostAll()
-	
-	local applyMaterial = self:ShouldApplyMaterial()
-	local applyColor    = self:ShouldApplyColor()
-	
+	local count = self:GetCount()
+	if ( !self:ShouldGhostAll() and count ~= 0 ) then count = 1 end
+
 	local entMod  = ent:GetModel()
 	local entSkin = ent:GetSkin()
-	local entMat  = ent:GetMaterial() or ""
-	local entCol  = ent:GetColor() or TRANSPARENT
 	
-	entCol.a = 150
+	local ghoststack = {}
+	local ghost
 	
-	if ( !ghostAll and count ~= 0 ) then
-		count = 1
-	end
-
 	for i = 1, count, 1 do
-		local ghost
-
 		if ( CLIENT ) then ghost = ents.CreateClientProp( entMod )
 		else               ghost = ents.Create( "prop_physics" ) end
 		
-		if ( !IsValid( ghost ) ) then ghost = nil continue end
+		if ( !IsValid( ghost ) ) then continue end
 
 		ghost:SetModel( entMod )
-		ghost:SetPos( pos )
-		ghost:SetAngles( ang )
+		ghost:SetSkin( entSkin )
 		ghost:Spawn()
 
 		ghost:SetSolid( SOLID_VPHYSICS )
 		ghost:SetMoveType( MOVETYPE_NONE )
 		ghost:SetRenderMode( RENDERMODE_TRANSALPHA )
 		ghost:SetNotSolid( true )
-		ghost:SetSkin( entSkin )
-		ghost:SetMaterial( ( applyMaterial and entMat ) or "" )
-		ghost:SetColor( ( applyColor and entCol ) or TRANSPARENT )
 		
 		table.insert( ghoststack, ghost )
 	end
 	
-	if ( SERVER and addHalos ) then
-		net.Start( "Stacker.StackGhost" )
-			net.WriteTable( ghoststack )
-		net.Send( self:GetOwner() )
-	end
-	
-	self:SetGhostStack( ghoststack )
+	SetGhostStack( ghoststack )
 	
 	return true
 end
@@ -634,25 +644,87 @@ end
 --
 -- 	TOOL:ReleaseGhostStack()
 --	
---	Attempts to remove all ghosted props in the stack on the server (if singleplayer)
---	or on the client (in multiplayer). This occurs when the player stops looking at
---	a prop with the stacker tool equipped.
+--	Attempts to remove all ghosted props in the stack. 
+--	This occurs when the player stops looking at a prop with the stacker tool equipped.
 --]]--
 function TOOL:ReleaseGhostStack()
-	local ghoststack = self:GetGhostStack()
+	local ghoststack = GetGhostStack()
 	if ( !ghoststack ) then return end
 	
-	for k,v in pairs( ghoststack ) do
-		if ( !IsValid( v ) ) then continue end
-		v:Remove()
+	for i = 1, #ghoststack, 1 do
+		if ( !IsValid( ghoststack[ i ] ) ) then continue end
+		ghoststack[ i ]:Remove()
+		ghoststack[ i ] = nil
 	end
 	
-	if ( SERVER ) then 
-		net.Start( "Stacker.UnstackGhost" )
-		net.Send( self:GetOwner() )
+	SetGhostStack( nil )
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:CheckGhostStack()
+--
+--	Attempts to validate the status of the ghosted props in the stack.
+--]]--
+function TOOL:CheckGhostStack()
+	local ghoststack = GetGhostStack()
+	if ( !ghoststack ) then return false end
+	
+	for i = 1, #ghoststack, 1 do
+		if ( !IsValid( ghoststack[ i ] ) ) then return false end
 	end
 	
-	table.Empty( ghoststack )
+	if     ( #ghoststack ~= self:GetCount() and  self:ShouldGhostAll() ) then return false
+	elseif ( #ghoststack ~= 1               and !self:ShouldGhostAll() ) then return false end
+	
+	return true
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	TOOL:UpdateGhostStack( entity )
+--
+--	Attempts to update the positions and angles of all ghosted props in the stack.
+--]]--
+function TOOL:UpdateGhostStack( ent )
+	local ghoststack = GetGhostStack()
+	
+	local mode	 = self:GetStackerMode()
+	local dir	 = self:GetDirection()
+	local offset = self:GetOffsetVector()
+	local rotate = self:GetRotateAngle()
+	local recalc = self:ShouldStackRelative()
+	
+	local applyMaterial = self:ShouldApplyMaterial()
+	local applyColor    = self:ShouldApplyColor()
+	
+	local lastEnt = ent
+	local entPos = lastEnt:GetPos()
+	local entAng = lastEnt:GetAngles()
+	local entMat = ent:GetMaterial() or ""
+	local entCol = ent:GetColor() or TRANSPARENT
+	      entCol.a = 150
+	
+	local stackdir, height, thisoffset
+	local ghost
+	
+	for i = 1, #ghoststack, 1 do
+		if ( i == 1 or ( mode == MODE_PROP and recalc ) ) then
+			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
+		end
+
+		entPos = entPos + stackdir * height + thisoffset
+		entAng = entAng + rotate
+	
+		local ghost = ghoststack[ i ]
+		
+		ghost:SetAngles( entAng )
+		ghost:SetPos( entPos )
+		ghost:SetMaterial( ( applyMaterial and entMat ) or "" )
+		ghost:SetColor( ( applyColor and entCol ) or TRANSPARENT )
+		ghost:SetNoDraw( false )
+		lastEnt = ghost
+	end
 end
 
 --[[--------------------------------------------------------------------------
@@ -663,41 +735,31 @@ end
 --	the player is looking at any props and attempt to create the stack of
 --	ghosted props before the players actually left clicks.
 --]]--
-local VEC = Vector( 0, 0, 0 )
-local ANG =  Angle( 0, 0, 0 )
-local HaloColor = Color( 181, 0, 217 )
-
 function TOOL:Think()
+	if ( SERVER ) then return end
+	
 	local ply        = self:GetOwner()
 	local trace      = ply:GetEyeTrace()
 	local traceValid = IsValid( trace.Entity )
 	
 	if ( traceValid and trace.Entity:GetClass() == "prop_physics" ) then
-		self.NewEnt = trace.Entity
+		self.CurrentEnt = trace.Entity
 
-		if ( self.NewEnt ~= self.LastEnt ) then
-			if ( self:CreateGhostStack( self.NewEnt, VEC, ANG ) ) then self.LastEnt = self.NewEnt end
-		end
-		if ( !self:CheckGhostStack() ) then
-			self:ReleaseGhostStack()
-			self.LastEnt = nil
+		if ( self.CurrentEnt == self.LastEnt ) then
+			if ( self:CheckGhostStack() ) then
+				self:UpdateGhostStack( self.CurrentEnt )
+			else
+				self:ReleaseGhostStack()
+				self.LastEnt = nil
+			end
+		else
+			if ( self:CreateGhostStack( self.CurrentEnt ) ) then
+				self.LastEnt = self.CurrentEnt 
+			end
 		end
 	else
 		self:ReleaseGhostStack()
 		self.LastEnt = nil
-	end
-	
-	if ( IsValid( self.LastEnt ) ) then
-		self:UpdateGhostStack( self.LastEnt )
-	end
-	
-	if ( CLIENT ) then
-		if ( !self:ShouldAddHalos() ) then return end
-		
-		local ghoststack = self:GetGhostStack()
-		if ( !ghoststack or #ghoststack <= 0 ) then return end
-
-		halo.Add( ghoststack, self:GetHaloColor() )
 	end
 end
 
@@ -708,17 +770,17 @@ end
 --	Builds the control panel menu that can be seen when holding Q and accessing
 --	the stacker menu.
 --]]--
-function TOOL.BuildCPanel( CPanel )
-	CPanel:AddControl( "Header", { Text = "#Tool.stacker.name", Description	= "#Tool.stacker.desc" } )
+function TOOL.BuildCPanel( cpanel )
+	cpanel:AddControl( "Header", { Text = "#Tool.stacker.name", Description	= "#Tool.stacker.desc" } )
 	
-	CPanel:AddControl( "Checkbox", { Label = "Freeze Props",     Command = "stacker_freeze" } )
-	CPanel:AddControl( "Checkbox", { Label = "Weld Props",       Command = "stacker_weld" } )
-	CPanel:AddControl( "Checkbox", { Label = "No Collide Props", Command = "stacker_nocollide" } )
+	cpanel:AddControl( "Checkbox", { Label = "Freeze Props",     Command = "stacker_freeze" } )
+	cpanel:AddControl( "Checkbox", { Label = "Weld Props",       Command = "stacker_weld" } )
+	cpanel:AddControl( "Checkbox", { Label = "No Collide Props", Command = "stacker_nocollide" } )
 
 	local params = { Label = "Relative To:", MenuButton = "0", Options = {} }
 	params.Options[ "World" ] = { stacker_mode = "1" }
 	params.Options[ "Prop" ]  = { stacker_mode = "2" }
-	CPanel:AddControl( "ComboBox", params )
+	cpanel:AddControl( "ComboBox", params )
 
 	local params = { Label = "Stack Direction", MenuButton = "0", Options = {} }
 	params.Options[ "Up" ]     = { stacker_dir = "1" }
@@ -727,24 +789,25 @@ function TOOL.BuildCPanel( CPanel )
 	params.Options[ "Behind" ] = { stacker_dir = "4" }
 	params.Options[ "Right" ]  = { stacker_dir = "5" }
 	params.Options[ "Left" ]   = { stacker_dir = "6" }
-	CPanel:AddControl( "ComboBox", params )
+	cpanel:AddControl( "ComboBox", params )
 
-	CPanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = GetConVarNumber( "stacker_max_count" ), Command = "stacker_count", Description = "How many props to stack." } )
+	cpanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = GetConVarNumber( "stacker_max_count" ), Command = "stacker_count", Description = "How many props to stack." } )
 
-	CPanel:AddControl( "Header", { Text = "Advanced Options", Description = "These options are for advanced users. Leave them all default ( 0 ) if you don't understand what they do." }  )
-	CPanel:AddControl( "Button", { Label = "Reset Advanced Options", Command = "stacker_resetoffsets", Text = "Reset" } )
+	cpanel:AddControl( "Header", { Text = "Advanced Options", Description = "These options are for advanced users. Leave them all default ( 0 ) if you don't understand what they do." }  )
+	cpanel:AddControl( "Button", { Label = "Reset Advanced Options", Command = "stacker_resetoffsets", Text = "Reset" } )
 	
-	CPanel:AddControl( "Slider", { Label = "Offset X ( forward/back )", Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetx" ), Max = GetConVarNumber( "stacker_max_offsetx" ), Value = 0, Command = "stacker_offsetx" } )
-	CPanel:AddControl( "Slider", { Label = "Offset Y ( right/left )",   Type = "Float", Min = - GetConVarNumber( "stacker_max_offsety" ), Max = GetConVarNumber( "stacker_max_offsety" ), Value = 0, Command = "stacker_offsety" } )
-	CPanel:AddControl( "Slider", { Label = "Offset Z ( up/down )",      Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetz" ), Max = GetConVarNumber( "stacker_max_offsetz" ), Value = 0, Command = "stacker_offsetz" } )
-	CPanel:AddControl( "Slider", { Label = "Rotate Pitch",              Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotp" } )
-	CPanel:AddControl( "Slider", { Label = "Rotate Yaw",                Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_roty" } )
-	CPanel:AddControl( "Slider", { Label = "Rotate Roll",               Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotr" } )
+	cpanel:AddControl( "Slider", { Label = "Offset X ( forward/back )", Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetx" ), Max = GetConVarNumber( "stacker_max_offsetx" ), Value = 0, Command = "stacker_offsetx" } )
+	cpanel:AddControl( "Slider", { Label = "Offset Y ( right/left )",   Type = "Float", Min = - GetConVarNumber( "stacker_max_offsety" ), Max = GetConVarNumber( "stacker_max_offsety" ), Value = 0, Command = "stacker_offsety" } )
+	cpanel:AddControl( "Slider", { Label = "Offset Z ( up/down )",      Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetz" ), Max = GetConVarNumber( "stacker_max_offsetz" ), Value = 0, Command = "stacker_offsetz" } )
+	cpanel:AddControl( "Slider", { Label = "Rotate Pitch",              Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotp" } )
+	cpanel:AddControl( "Slider", { Label = "Rotate Yaw",                Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_roty" } )
+	cpanel:AddControl( "Slider", { Label = "Rotate Roll",               Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotr" } )
 	
-	CPanel:AddControl( "Checkbox", { Label = "Stack props relative to new rotation", Command = "stacker_recalc",    Description = "If this is checked, each item in the stack will be stacked relative to the previous item in the stack. This allows you to create curved stacks." } )
-	CPanel:AddControl( "Checkbox", { Label = "Ghost all of the props in the stack",  Command = "stacker_ghostall",  Description = "Creates every ghost prop in the stack instead of just the first ghost prop" } )
-	CPanel:AddControl( "Checkbox", { Label = "Apply material to the stacked props",  Command = "stacker_material",  Description = "Applies the material of the original prop to all stacked props" } )
-	CPanel:AddControl( "Checkbox", { Label = "Apply color to the stacked props",     Command = "stacker_color",     Description = "Applies the color of the original prop to all stacked props" } )
-	CPanel:AddControl( "Checkbox", { Label = "Add halos to the ghost props",         Command = "stacker_halo",      Description = "Give the ghost a halo" } )
-	CPanel:AddControl( "Color", { Label = "Halo color", Red = "stacker_halo_r", Green = "stacker_halo_g", Blue = "stacker_halo_b", Alpha = "stacker_halo_a" } )
+	cpanel:AddControl( "Checkbox", { Label = "Stack relative to new rotation", Command = "stacker_recalc",    Description = "If this is checked, each item in the stack will be stacked relative to the previous item in the stack. This allows you to create curved stacks." } )
+	cpanel:AddControl( "Checkbox", { Label = "Apply material",                 Command = "stacker_material",  Description = "Applies the material of the original prop to all stacked props" } )
+	cpanel:AddControl( "Checkbox", { Label = "Apply color",                    Command = "stacker_color",     Description = "Applies the color of the original prop to all stacked props" } )
+	cpanel:AddControl( "Checkbox", { Label = "Apply physical properties",      Command = "stacker_physprop",  Description = "Applies the physical properties of the original prop to all stacked props" } )
+	cpanel:AddControl( "Checkbox", { Label = "Ghost all props in the stack",   Command = "stacker_ghostall",  Description = "Creates every ghost prop in the stack instead of just the first ghost prop" } )
+	cpanel:AddControl( "Checkbox", { Label = "Add halos to ghosted props",     Command = "stacker_halo",      Description = "Gives halos to all of the props in to ghosted stack" } )
+	cpanel:AddControl( "Color", { Label = "Halo color", Red = "stacker_halo_r", Green = "stacker_halo_g", Blue = "stacker_halo_b", Alpha = "stacker_halo_a" } )
 end
