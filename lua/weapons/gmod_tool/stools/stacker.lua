@@ -553,7 +553,7 @@ end
 function TOOL:ApplyPhysicalProperties( original, newEnt, boneID, properties )
 	if ( !self:ShouldApplyPhysicalProperties() ) then return end
 	
-	if ( boneID ) then construct.SetPhysProp( _, newEnt, boneID, _, properties ) end
+	if ( boneID ) then construct.SetPhysProp( nil, newEnt, boneID, nil, properties ) end
 	newEnt:GetPhysicsObject():SetMass( original:GetPhysicsObject():GetMass() )
 end
 
