@@ -428,6 +428,7 @@ function TOOL:LeftClick( trace )
 
 	local entPos  = ent:GetPos()
 	local entAng  = ent:GetAngles()
+	local entMod  = ent:GetModel()
 	local entSkin = ent:GetSkin()
 	local entMat  = ent:GetMaterial()
 	local entCol  = ent:GetColor()
@@ -440,8 +441,9 @@ function TOOL:LeftClick( trace )
 	undo.Create( "stacker" )
 	
 	for i = 1, count, 1 do
-		if ( !self:GetSWEP():CheckLimit( "props" ) ) then break end
-
+		if ( !self:GetSWEP():CheckLimit( "props" ) )                         then break end
+		if ( hook.Run( "PlayerSpawnProp", self:GetOwner(), entMod ) ~= nil ) then break end
+		
 		if ( i == 1 or ( mode == MODE_PROP and stackRelative ) ) then
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
 		end
@@ -455,9 +457,10 @@ function TOOL:LeftClick( trace )
 		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
 		-- remove or mark this entity so that those same functions (if overridden) can
 		-- detect that the entity came from Stacker
-		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil ) then continue end
+		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil )             then continue end
+		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", self:GetOwner(), entMod, newEnt ) ~= nil ) then continue end
 		
-		newEnt:SetModel( ent:GetModel() )
+		newEnt:SetModel( entMod )
 		newEnt:SetPos( entPos )
 		newEnt:SetAngles( entAng )
 		newEnt:SetSkin( entSkin )
