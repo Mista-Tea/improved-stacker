@@ -441,8 +441,8 @@ function TOOL:LeftClick( trace )
 	undo.Create( "stacker" )
 	
 	for i = 1, count, 1 do
-		if ( !self:GetSWEP():CheckLimit( "props" ) )                         then break end
-		if ( hook.Run( "PlayerSpawnProp", self:GetOwner(), entMod ) ~= nil ) then break end
+		if ( !self:GetSWEP():CheckLimit( "props" ) )                           then break end
+		if ( hook.Run( "PlayerSpawnProp", self:GetOwner(), entMod ) == false ) then break end
 		
 		if ( i == 1 or ( mode == MODE_PROP and stackRelative ) ) then
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
@@ -476,7 +476,6 @@ function TOOL:LeftClick( trace )
 		lastEnt = newEnt
 		
 		undo.AddEntity( newEnt )
-		ply:AddCount( "props", newEnt )
 		ply:AddCleanup( "props", newEnt )
 	end
 	
