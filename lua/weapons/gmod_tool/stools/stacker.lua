@@ -452,6 +452,11 @@ function TOOL:LeftClick( trace )
 		entAng = entAng + rotate
 
 		newEnt = ents.Create( "prop_physics" )
+		newEnt:SetModel( entMod )
+		newEnt:SetPos( entPos )
+		newEnt:SetAngles( entAng )
+		newEnt:SetSkin( entSkin )
+		newEnt:Spawn()
 		
 		-- this hook is for external prop protections and anti-spam addons
 		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
@@ -459,12 +464,6 @@ function TOOL:LeftClick( trace )
 		-- detect that the entity came from Stacker
 		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil )             then continue end
 		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", self:GetOwner(), entMod, newEnt ) ~= nil ) then continue end
-		
-		newEnt:SetModel( entMod )
-		newEnt:SetPos( entPos )
-		newEnt:SetAngles( entAng )
-		newEnt:SetSkin( entSkin )
-		newEnt:Spawn()
 
 		self:ApplyMaterial( newEnt, entMat )
 		self:ApplyColor( newEnt, entCol )
