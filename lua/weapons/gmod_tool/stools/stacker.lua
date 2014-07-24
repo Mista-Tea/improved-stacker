@@ -569,7 +569,7 @@ end
 
 --[[--------------------------------------------------------------------------
 --
--- 	TOOL:ApplyNoCollide( entity, entity )
+-- 	TOOL:ApplyNoCollide( table )
 --
 --	Attempts to nocollide all stacker entities with one another.
 --	This is roughly an O( N^2 ) operation since we need to nocollide N ents with N - 1 other ents.
