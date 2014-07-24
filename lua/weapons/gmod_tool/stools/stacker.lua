@@ -134,8 +134,6 @@ local DIRECTION_LEFT   = 6
 local VECTOR_ZERO = Vector( 0, 0, 0 )
 local ANGLE_ZERO  = Angle( 0, 0, 0 )
 
-local GhostStack = {}
-
 --[[--------------------------------------------------------------------------
 -- Console Variables
 --------------------------------------------------------------------------]]--
@@ -222,8 +220,8 @@ end
 --
 --	Gets and sets the table of ghosted props in the stack.
 --]]--
-local function GetGhostStack() return GhostStack end
-local function SetGhostStack( tbl ) GhostStack = tbl end
+function TOOL:GetGhostStack() return self.GhostStack       end
+function TOOL:SetGhostStack( tbl )   self.GhostStack = tbl end
 
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetCount()
@@ -354,6 +352,16 @@ function TOOL:ShouldApplyPhysicalProperties() return self:GetClientNumber( "phys
 
 --[[--------------------------------------------------------------------------
 --
+-- 	 TOOL:Deploy()
+--
+--	Called when the player switches to a different weapon or tool.
+--]]--
+function TOOL:Deploy()
+	self:ReleaseGhostStack()
+end
+
+--[[--------------------------------------------------------------------------
+--
 -- 	 TOOL:Holster()
 --
 --	Called when the player switches to a different weapon or tool.
@@ -361,6 +369,28 @@ function TOOL:ShouldApplyPhysicalProperties() return self:GetClientNumber( "phys
 function TOOL:Holster()
 	self:ReleaseGhostStack()
 end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	 TOOL:OnRemove()
+--
+--	Called when the player switches to a different weapon or tool.
+--]]--
+function TOOL:OnRemove()
+	self:ReleaseGhostStack()
+end
+
+--[[--------------------------------------------------------------------------
+--
+-- 	 TOOL:OnDrop()
+--
+--	Called when the player switches to a different weapon or tool.
+--]]--
+function TOOL:OnDrop()
+	self:ReleaseGhostStack()
+end
+
+
 
 --[[--------------------------------------------------------------------------
 --
@@ -374,7 +404,7 @@ end
 --	this tool's function, loading hooked functions here ensures that we can use
 --	'self' to refer to this tool object even after the TOOL global table has been made nil.
 --]]--
-function TOOL:Init()	
+function TOOL:Init()
 	if ( CLIENT ) then
 		self:AddHalos()
 	end
@@ -390,13 +420,14 @@ end
 --	will be called way more than it needs to be and causes horrible FPS drop in singleplayer.
 --]]--
 function TOOL:AddHalos()
-	hook.Add( "PreDrawHalos", "stacker.predrawhalos", function()
-		if ( !IsValid( LocalPlayer() ) ) then return end
-		if ( !LocalPlayer():Alive() ) then return end
-		if ( !IsValid( self:GetSWEP() ) ) then return end
-		if ( !self:ShouldAddHalos() ) then return end
+	hook.Add( "PreDrawHalos", "improvedstacker.predrawhalos", function()
+		if ( !IsValid( LocalPlayer() ) )         then return end
+		if ( !LocalPlayer():Alive() )            then return end
+		if ( !IsValid( LocalPlayer():GetActiveWeapon() ) or LocalPlayer():GetActiveWeapon():GetClass() ~= "gmod_tool" ) then return end
+		if ( !IsValid( self:GetSWEP() ) )        then return end
+		if ( !self:ShouldAddHalos() )            then return end
 		
-		local ghoststack = GetGhostStack()
+		local ghoststack = self:GetGhostStack()
 		if ( !ghoststack or #ghoststack <= 0 ) then return end
 
 		halo.Add( ghoststack, self:GetHaloColor() )
@@ -468,8 +499,10 @@ function TOOL:LeftClick( trace )
 		self:ApplyMaterial( newEnt, entMat )
 		self:ApplyColor( newEnt, entCol )
 		self:ApplyFreeze( ply, newEnt )
-		self:ApplyWeld( lastEnt, newEnt )
+
 		self:ApplyNoCollide( lastEnt, newEnt )
+		self:ApplyWeld( lastEnt, newEnt )
+		
 		self:ApplyPhysicalProperties( ent, newEnt, trace.PhysicsBone, { GravityToggle = physGrav, Material = physMat } )
 		
 		lastEnt = newEnt
@@ -610,7 +643,7 @@ end
 local TRANSPARENT = Color( 255, 255, 255, 150 )
 
 function TOOL:CreateGhostStack( ent )
-	if ( GetGhostStack() ) then self:ReleaseGhostStack() end
+	if ( self:GetGhostStack() ) then self:ReleaseGhostStack() end
 
 	local count = self:GetCount()
 	if ( !self:ShouldGhostAll() and count ~= 0 ) then count = 1 end
@@ -639,7 +672,7 @@ function TOOL:CreateGhostStack( ent )
 		table.insert( ghoststack, ghost )
 	end
 	
-	SetGhostStack( ghoststack )
+	self:SetGhostStack( ghoststack )
 	
 	return true
 end
@@ -652,7 +685,7 @@ end
 --	This occurs when the player stops looking at a prop with the stacker tool equipped.
 --]]--
 function TOOL:ReleaseGhostStack()
-	local ghoststack = GetGhostStack()
+	local ghoststack = self:GetGhostStack()
 	if ( !ghoststack ) then return end
 	
 	for i = 1, #ghoststack, 1 do
@@ -661,7 +694,7 @@ function TOOL:ReleaseGhostStack()
 		ghoststack[ i ] = nil
 	end
 	
-	SetGhostStack( nil )
+	self:SetGhostStack( nil )
 end
 
 --[[--------------------------------------------------------------------------
@@ -671,7 +704,7 @@ end
 --	Attempts to validate the status of the ghosted props in the stack.
 --]]--
 function TOOL:CheckGhostStack()
-	local ghoststack = GetGhostStack()
+	local ghoststack = self:GetGhostStack()
 	if ( !ghoststack ) then return false end
 	
 	for i = 1, #ghoststack, 1 do
@@ -691,10 +724,10 @@ end
 --	Attempts to update the positions and angles of all ghosted props in the stack.
 --]]--
 function TOOL:UpdateGhostStack( ent )
-	local ghoststack = GetGhostStack()
+	local ghoststack = self:GetGhostStack()
 	
-	local mode	 = self:GetStackerMode()
-	local dir	 = self:GetDirection()
+	local mode   = self:GetStackerMode()
+	local dir    = self:GetDirection()
 	local offset = self:GetOffsetVector()
 	local rotate = self:GetRotateAngle()
 	local recalc = self:ShouldStackRelative()
