@@ -468,6 +468,7 @@ function TOOL:LeftClick( trace )
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
 	local lastEnt = ent
 	local newEnt
+	local newEnts = { ent }
 	
 	undo.Create( "stacker" )
 	
@@ -499,17 +500,18 @@ function TOOL:LeftClick( trace )
 		self:ApplyMaterial( newEnt, entMat )
 		self:ApplyColor( newEnt, entCol )
 		self:ApplyFreeze( ply, newEnt )
-
-		self:ApplyNoCollide( lastEnt, newEnt )
 		self:ApplyWeld( lastEnt, newEnt )
 		
 		self:ApplyPhysicalProperties( ent, newEnt, trace.PhysicsBone, { GravityToggle = physGrav, Material = physMat } )
 		
 		lastEnt = newEnt
+		table.insert( newEnts, newEnt )
 		
 		undo.AddEntity( newEnt )
 		ply:AddCleanup( "props", newEnt )
 	end
+	
+	self:ApplyNoCollide( newEnts )
 	
 	undo.SetPlayer( ply )
 	undo.Finish()
@@ -562,18 +564,28 @@ end
 --]]--
 function TOOL:ApplyWeld( lastEnt, newEnt )
 	if ( !self:ShouldApplyWeld() ) then return end
-	undo.AddEntity( constraint.Weld( lastEnt, newEnt, 0, 0, 0 ) )
+	constraint.Weld( lastEnt, newEnt, 0, 0, 0 )
 end
 
 --[[--------------------------------------------------------------------------
 --
 -- 	TOOL:ApplyNoCollide( entity, entity )
 --
---	Attempts to nocollide the new entity with the last entity.
+--	Attempts to nocollide all stacker entities with one another.
+--	This is roughly an O( N^2 ) operation since we need to nocollide N ents with N - 1 other ents.
 --]]--
-function TOOL:ApplyNoCollide( lastEnt, newEnt )
+function TOOL:ApplyNoCollide( stackerEnts )
 	if ( !self:ShouldApplyNoCollide() ) then return end
-	undo.AddEntity( constraint.NoCollide( lastEnt, newEnt, 0, 0 ) )
+	
+	for _, stackerEnt in pairs( stackerEnts ) do
+		for _, otherEnt in pairs( stackerEnts ) do
+			if ( stackerEnt == otherEnt ) then continue end
+			
+			constraint.NoCollide( stackerEnt, otherEnt, 0, 0 )
+		end
+	end
+	
+	stackerEnts = nil
 end
 
 --[[--------------------------------------------------------------------------
