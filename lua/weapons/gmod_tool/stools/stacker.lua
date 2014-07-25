@@ -33,19 +33,19 @@
 			- Modified NoCollide to actually no-collide each stacker prop with every other prop in the stack.
 			
 			- Added console variables for server operators to limit various parts of stacker.
-				> stacker_max_count
-				> stacker_max_offsetx
-				> stacker_max_offsety
-				> stacker_max_offsetz
-				> stacker_stayinworld
-				
+				> stacker_max_count < 0 / inf >
+				> stacker_max_offsetx < -inf / inf >
+				> stacker_max_offsety < -inf / inf >
+				> stacker_max_offsetz < -inf / inf >
+				> stacker_stayinworld < 1 / 0 >
+
 			- Added console commands for server admins to control the console variables that limit stacker.
-				> stacker_set_maxcount #
-				> stacker_set_maxoffset #
-				> stacker_set_maxoffsetx #
-				> stacker_set_maxoffsety #
-				> stacker_set_maxoffsetz #
-				> stacker_set_stayinworld
+				> stacker_set_maxcount < 0 / inf >
+				> stacker_set_maxoffset < -inf / inf >
+				> stacker_set_maxoffsetx < -inf / inf >
+				> stacker_set_maxoffsety < -inf / inf >
+				> stacker_set_maxoffsetz < -inf / inf >
+				> stacker_set_stayinworld < 1 / 0 >
 
 ----------------------------------------------------------------------------]]
 
