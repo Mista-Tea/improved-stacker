@@ -132,16 +132,19 @@ local DIRECTION_RIGHT  = 5
 local DIRECTION_LEFT   = 6
 
 local VECTOR_ZERO = Vector( 0, 0, 0 )
-local ANGLE_ZERO  = Angle( 0, 0, 0 )
+local ANGLE_ZERO  =  Angle( 0, 0, 0 )
+
+local TRANSPARENT = Color( 255, 255, 255, 150 )
 
 --[[--------------------------------------------------------------------------
 -- Console Variables
 --------------------------------------------------------------------------]]--
 
-CreateConVar( "stacker_max_count",    "30", bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
-CreateConVar( "stacker_max_offsetx", "500", bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_max_offsety", "500", bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_max_offsetz", "500", bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_max_count",    30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
+CreateConVar( "stacker_max_offsetx", 500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_max_offsety", 500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_max_offsetz", 500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_stayinworld",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -150,7 +153,7 @@ CreateConVar( "stacker_max_offsetz", "500", bit.bor( FCVAR_NOTIFY, FCVAR_REPLICA
 if ( CLIENT ) then
 	
 	local function ResetOffsets( ply, command, arguments )
-		-- Reset all of the offset options to 0
+		-- Reset all of the offset options to 0 and adv options to 1
 		LocalPlayer():ConCommand( "stacker_offsetx 0" )
 		LocalPlayer():ConCommand( "stacker_offsety 0" )
 		LocalPlayer():ConCommand( "stacker_offsetz 0" )
@@ -174,13 +177,13 @@ elseif ( SERVER ) then
 		if ( !count or count < 0 ) then return false end
 		return true
 	end
-	
+	--[[-------------------------------------------------------------]]--
 	concommand.Add( "stacker_set_maxcount", function( ply, cmd, args )		
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
 		RunConsoleCommand( "stacker_max_count", args[1] )
 	end )
-
+	--[[-------------------------------------------------------------]]--
 	concommand.Add( "stacker_set_maxoffset", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
@@ -188,25 +191,30 @@ elseif ( SERVER ) then
 		RunConsoleCommand( "stacker_max_offsety", args[1] )
 		RunConsoleCommand( "stacker_max_offsetz", args[1] )
 	end )
-
+	--[[-------------------------------------------------------------]]--
 	concommand.Add( "stacker_set_maxoffsetx", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
 		RunConsoleCommand( "stacker_max_offsetx", args[1] )
 	end )
-
+	--[[-------------------------------------------------------------]]--
 	concommand.Add( "stacker_set_maxoffsety", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
 		RunConsoleCommand( "stacker_max_offsety", args[1] )
 	end )
-
+	--[[-------------------------------------------------------------]]--
 	concommand.Add( "stacker_set_maxoffsetz", function( ply, cmd, args )
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
 		RunConsoleCommand( "stacker_max_offsetz", args[1] )
 	end )
-	
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( "stacker_set_stayinworld", function( ply, cmd, args )
+		if ( !ValidateCommand( ply, args[1] ) ) then return false end
+		
+		RunConsoleCommand( "stacker_stayinworld", ( tobool( args[1] ) and 1 ) or 0 )
+	end )
 end
 
 
@@ -220,8 +228,8 @@ end
 --
 --	Gets and sets the table of ghosted props in the stack.
 --]]--
-function TOOL:GetGhostStack() return self.GhostStack       end
-function TOOL:SetGhostStack( tbl )   self.GhostStack = tbl end
+local function GetGhostStack() return GhostStack       end
+local function SetGhostStack( tbl )   GhostStack = tbl end
 
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetCount()
@@ -354,7 +362,7 @@ function TOOL:ShouldApplyPhysicalProperties() return self:GetClientNumber( "phys
 --
 -- 	 TOOL:Deploy()
 --
---	Called when the player switches to a different weapon or tool.
+--	Called when the player brings out this tool.
 --]]--
 function TOOL:Deploy()
 	self:ReleaseGhostStack()
@@ -364,7 +372,7 @@ end
 --
 -- 	 TOOL:Holster()
 --
---	Called when the player switches to a different weapon or tool.
+--	Called when the player switches to a different tool.
 --]]--
 function TOOL:Holster()
 	self:ReleaseGhostStack()
@@ -374,7 +382,8 @@ end
 --
 -- 	 TOOL:OnRemove()
 --
---	Called when the player switches to a different weapon or tool.
+--	Should be called when the toolgun is somehow removed, but more than likely
+--	doesn't get called due to the way the gmod_tool was coded.
 --]]--
 function TOOL:OnRemove()
 	self:ReleaseGhostStack()
@@ -384,7 +393,8 @@ end
 --
 -- 	 TOOL:OnDrop()
 --
---	Called when the player switches to a different weapon or tool.
+--	Should be called when when the toolgun is dropped, but more than likely
+--	doesn't get called due to the way to gmod_tool was coded.
 --]]--
 function TOOL:OnDrop()
 	self:ReleaseGhostStack()
@@ -404,11 +414,11 @@ end
 --	this tool's function, loading hooked functions here ensures that we can use
 --	'self' to refer to this tool object even after the TOOL global table has been made nil.
 --]]--
-function TOOL:Init()
-	if ( CLIENT ) then
+--[[if ( CLIENT ) then
+	function TOOL:Init()
 		self:AddHalos()
 	end
-end
+end]]
 
 --[[--------------------------------------------------------------------------
 --
@@ -419,20 +429,21 @@ end
 --	THIS is the appropriate hook to create halos, NOT TOOL:Think()! The latter 
 --	will be called way more than it needs to be and causes horrible FPS drop in singleplayer.
 --]]--
-function TOOL:AddHalos()
+--[[function TOOL:AddHalos()
 	hook.Add( "PreDrawHalos", "improvedstacker.predrawhalos", function()
 		if ( !IsValid( LocalPlayer() ) )         then return end
 		if ( !LocalPlayer():Alive() )            then return end
 		if ( !IsValid( LocalPlayer():GetActiveWeapon() ) or LocalPlayer():GetActiveWeapon():GetClass() ~= "gmod_tool" ) then return end
 		if ( !IsValid( self:GetSWEP() ) )        then return end
 		if ( !self:ShouldAddHalos() )            then return end
-		
-		local ghoststack = self:GetGhostStack()
+
+		local ghoststack = GetGhostStack()
 		if ( !ghoststack or #ghoststack <= 0 ) then return end
 
 		halo.Add( ghoststack, self:GetHaloColor() )
 	end )
-end
+	hook.Remove( "PreDrawHalos", "improvedstacker.predrawhalos" )
+end]]
 
 --[[--------------------------------------------------------------------------
 --
@@ -453,6 +464,7 @@ function TOOL:LeftClick( trace )
 	local rotate = self:GetRotateAngle()
 
 	local stackRelative = self:ShouldStackRelative()
+	local stayInWorld   = GetConVarNumber( "stacker_stayinworld" ) == 1
 
 	local ply = self:GetOwner()
 	local ent = trace.Entity
@@ -466,9 +478,9 @@ function TOOL:LeftClick( trace )
 	
 	local physMat  = ent:GetPhysicsObject():GetMaterial()
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
-	local lastEnt = ent
+	local lastEnt  = ent
+	local newEnts  = { ent }
 	local newEnt
-	local newEnts = { ent }
 	
 	undo.Create( "stacker" )
 	
@@ -482,7 +494,9 @@ function TOOL:LeftClick( trace )
 		
 		entPos = entPos + stackdir * height + thisoffset
 		entAng = entAng + rotate
-
+		
+		if ( stayInWorld and !util.IsInWorld( entPos ) ) then ply:PrintMessage( HUD_PRINTTALK, "Stacked props must be spawned within the world" ) break end
+		
 		newEnt = ents.Create( "prop_physics" )
 		newEnt:SetModel( entMod )
 		newEnt:SetPos( entPos )
@@ -652,10 +666,8 @@ end
 --	as a visual aid for the player so they can see the results without actually creating
 --	the entities yet (if in multiplayer).
 --]]--
-local TRANSPARENT = Color( 255, 255, 255, 150 )
-
 function TOOL:CreateGhostStack( ent )
-	if ( self:GetGhostStack() ) then self:ReleaseGhostStack() end
+	if ( GetGhostStack() ) then self:ReleaseGhostStack() end
 
 	local count = self:GetCount()
 	if ( !self:ShouldGhostAll() and count ~= 0 ) then count = 1 end
@@ -684,7 +696,7 @@ function TOOL:CreateGhostStack( ent )
 		table.insert( ghoststack, ghost )
 	end
 	
-	self:SetGhostStack( ghoststack )
+	SetGhostStack( ghoststack )
 	
 	return true
 end
@@ -697,7 +709,7 @@ end
 --	This occurs when the player stops looking at a prop with the stacker tool equipped.
 --]]--
 function TOOL:ReleaseGhostStack()
-	local ghoststack = self:GetGhostStack()
+	local ghoststack = GetGhostStack()
 	if ( !ghoststack ) then return end
 	
 	for i = 1, #ghoststack, 1 do
@@ -706,7 +718,7 @@ function TOOL:ReleaseGhostStack()
 		ghoststack[ i ] = nil
 	end
 	
-	self:SetGhostStack( nil )
+	SetGhostStack( nil )
 end
 
 --[[--------------------------------------------------------------------------
@@ -716,7 +728,7 @@ end
 --	Attempts to validate the status of the ghosted props in the stack.
 --]]--
 function TOOL:CheckGhostStack()
-	local ghoststack = self:GetGhostStack()
+	local ghoststack = GetGhostStack()
 	if ( !ghoststack ) then return false end
 	
 	for i = 1, #ghoststack, 1 do
@@ -736,7 +748,7 @@ end
 --	Attempts to update the positions and angles of all ghosted props in the stack.
 --]]--
 function TOOL:UpdateGhostStack( ent )
-	local ghoststack = self:GetGhostStack()
+	local ghoststack = GetGhostStack()
 	
 	local mode   = self:GetStackerMode()
 	local dir    = self:GetDirection()
@@ -787,12 +799,11 @@ end
 function TOOL:Think()
 	if ( SERVER ) then return end
 	
-	local ply        = self:GetOwner()
-	local trace      = ply:GetEyeTrace()
-	local traceValid = IsValid( trace.Entity )
+	local ply = self:GetOwner()
+	local ent = ply:GetEyeTrace().Entity
 	
-	if ( traceValid and trace.Entity:GetClass() == "prop_physics" ) then
-		self.CurrentEnt = trace.Entity
+	if ( IsValid( ent ) and ent:GetClass() == "prop_physics" ) then
+		self.CurrentEnt = ent
 
 		if ( self.CurrentEnt == self.LastEnt ) then
 			if ( self:CheckGhostStack() ) then
@@ -800,12 +811,20 @@ function TOOL:Think()
 			else
 				self:ReleaseGhostStack()
 				self.LastEnt = nil
+				return
 			end
 		else
 			if ( self:CreateGhostStack( self.CurrentEnt ) ) then
 				self.LastEnt = self.CurrentEnt 
 			end
 		end
+		
+		if ( !self:ShouldAddHalos() )  then return end
+
+		local ghoststack = GetGhostStack()
+		if ( !ghoststack or #ghoststack <= 0 ) then return end
+
+		halo.Add( ghoststack, self:GetHaloColor() )
 	else
 		self:ReleaseGhostStack()
 		self.LastEnt = nil
