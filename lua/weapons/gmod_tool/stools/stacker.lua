@@ -10,15 +10,18 @@
 		Cleaned and optimized - Mista Tea
 		
 	Changelog:
-		- Added to GitHub May 27th, 2014
-		- Added to Workshop May 28th, 2014
-		- Massive overhaul June 5th, 2014
+		- Added to GitHub   May  27th, 2014
+		- Added to Workshop May  28th, 2014
+		- Massive overhaul  June  5th, 2014
+		- Large update      July 24th, 2014
 		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
 			- Prevents crash from players using very high P/Y/R rotate values.
+			- Prevents crash from very specific constraint settings.
 			- Fixed the halo option for ghosted props not working.
 			- Fixed massive FPS drop from halos being rendered in a Think hook instead of a PreDrawHalos hooks.
+				- Had to move back to using TOOL:Think
 			
 		Tweaks:
 			- Added convenience functions to retrieve the client convars.
@@ -27,12 +30,14 @@
 			- Added option to enable/disable automatically applying physical properties (gravity, physics material, weight) to the stacked props.
 			- Added support for props with multiple skins.
 			- Added support for external prop protections/anti-spam addons with the StackerEntity hook.
+			- Modified NoCollide to actually no-collide each stacker prop with every other prop in the stack.
 			
 			- Added console variables for server operators to limit various parts of stacker.
 				> stacker_max_count
 				> stacker_max_offsetx
 				> stacker_max_offsety
 				> stacker_max_offsetz
+				> stacker_stayinworld
 				
 			- Added console commands for server admins to control the console variables that limit stacker.
 				> stacker_set_maxcount #
@@ -40,6 +45,7 @@
 				> stacker_set_maxoffsetx #
 				> stacker_set_maxoffsety #
 				> stacker_set_maxoffsetz #
+				> stacker_set_stayinworld
 
 ----------------------------------------------------------------------------]]
 
