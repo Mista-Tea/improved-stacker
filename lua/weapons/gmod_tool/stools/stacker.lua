@@ -42,6 +42,7 @@
 				> stacker_force_weld < 0 / 1 >
 				> stacker_force_freeze < 0 / 1 >
 				> stacker_force_nocollide < 0 / 1 >
+				> stacker_delay < 0 / inf >
 
 			- Added console commands for server admins to control the console variables that limit stacker.
 				> stacker_set_maxcount < 0 / inf >
@@ -53,6 +54,7 @@
 				> stacker_set_weld < 0 / 1 >
 				> stacker_set_freeze < 0 / 1 >
 				> stacker_set_nocollide < 0 / 1 >
+				> stacker_set_delay < 0 / inf >
 
 ----------------------------------------------------------------------------]]
 
@@ -168,6 +170,7 @@ CreateConVar( "stacker_stayinworld",       0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLI
 CreateConVar( "stacker_force_freeze",      0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn frozen or not
 CreateConVar( "stacker_force_weld",        0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn welded or not
 CreateConVar( "stacker_force_nocollide",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn nocollided or not
+CreateConVar( "stacker_delay",             0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines the amount of time that must pass before a player can use stacker again
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -255,6 +258,12 @@ elseif ( SERVER ) then
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
 		RunConsoleCommand( "stacker_force_nocollide", ( tobool( args[1] ) and 1 ) or 0 )
+	end )
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( "stacker_set_delay", function( ply, cmd, args )
+		if ( !ValidateCommand( ply, args[1] ) ) then return false end
+		
+		RunConsoleCommand( "stacker_delay", args[1] )
 	end )
 end
 
@@ -396,7 +405,14 @@ function TOOL:ShouldApplyColor() return self:GetClientNumber( "color" ) == 1 end
 --]]--
 function TOOL:ShouldApplyPhysicalProperties() return self:GetClientNumber( "physprop" ) == 1 end
 
-
+--[[--------------------------------------------------------------------------
+-- 	TOOL:GetDelay()
+--
+--	Returns the time in seconds that must pass before a player can use stacker again.
+--	For example, if stacker_delay is set to 3, a player must wait 3 seconds in between each
+--	use of stacker's left click.
+--]]--
+function TOOL:GetDelay() return GetConVarNumber( "stacker_delay" ) end
 
 --[[--------------------------------------------------------------------------
 -- Tool Functions
@@ -501,7 +517,10 @@ function TOOL:LeftClick( trace )
 
 	local count = self:GetCount()
 	if ( count <= 0 ) then return false end
-
+	
+	if ( self:GetOwner().LastStackTime and self:GetOwner().LastStackTime + self:GetDelay() > CurTime() ) then self:GetOwner():PrintMessage( HUD_PRINTTALK, "You are using stacker too quickly" ) return false end
+	self:GetOwner().LastStackTime = CurTime()
+	
 	local dir    = self:GetDirection()
 	local mode   = self:GetStackerMode()
 	local offset = self:GetOffsetVector()
