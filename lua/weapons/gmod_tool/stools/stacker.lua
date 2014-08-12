@@ -166,12 +166,12 @@ if ( CLIENT ) then
 		LocalPlayer():ConCommand( "stacker_rotp 0" )
 		LocalPlayer():ConCommand( "stacker_roty 0" )
 		LocalPlayer():ConCommand( "stacker_rotr 0" )
-		LocalPlayer():ConCommand( "stacker_recalc 1" )
-		LocalPlayer():ConCommand( "stacker_ghostall 1" )
-		LocalPlayer():ConCommand( "stacker_material 1" )
-		LocalPlayer():ConCommand( "stacker_color 1" )
-		LocalPlayer():ConCommand( "stacker_physprop 1" )
-		LocalPlayer():ConCommand( "stacker_halo 1" )
+		--LocalPlayer():ConCommand( "stacker_recalc 1" )
+		--LocalPlayer():ConCommand( "stacker_ghostall 1" )
+		--LocalPlayer():ConCommand( "stacker_material 1" )
+		--LocalPlayer():ConCommand( "stacker_color 1" )
+		--LocalPlayer():ConCommand( "stacker_physprop 1" )
+		--LocalPlayer():ConCommand( "stacker_halo 1" )
 	end
 	concommand.Add( "stacker_resetoffsets", ResetOffsets )
 	
