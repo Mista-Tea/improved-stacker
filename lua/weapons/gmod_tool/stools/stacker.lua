@@ -14,6 +14,7 @@
 		- Added to Workshop May  28th, 2014
 		- Massive overhaul  June  5th, 2014
 		- Large update      July 24th, 2014
+		- Optimizations     Aug  12th, 2014
 		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
@@ -37,7 +38,10 @@
 				> stacker_max_offsetx < -inf / inf >
 				> stacker_max_offsety < -inf / inf >
 				> stacker_max_offsetz < -inf / inf >
-				> stacker_stayinworld < 1 / 0 >
+				> stacker_stayinworld < 0 / 1 >
+				> stacker_force_weld < 0 / 1 >
+				> stacker_force_freeze < 0 / 1 >
+				> stacker_force_nocollide < 0 / 1 >
 
 			- Added console commands for server admins to control the console variables that limit stacker.
 				> stacker_set_maxcount < 0 / inf >
@@ -45,7 +49,10 @@
 				> stacker_set_maxoffsetx < -inf / inf >
 				> stacker_set_maxoffsety < -inf / inf >
 				> stacker_set_maxoffsetz < -inf / inf >
-				> stacker_set_stayinworld < 1 / 0 >
+				> stacker_set_stayinworld < 0 / 1 >
+				> stacker_set_weld < 0 / 1 >
+				> stacker_set_freeze < 0 / 1 >
+				> stacker_set_nocollide < 0 / 1 >
 
 ----------------------------------------------------------------------------]]
 
