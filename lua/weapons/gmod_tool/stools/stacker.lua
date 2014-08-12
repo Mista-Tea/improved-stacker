@@ -138,7 +138,14 @@ local DIRECTION_RIGHT  = 5
 local DIRECTION_LEFT   = 6
 
 local VECTOR_ZERO = Vector( 0, 0, 0 )
-local ANGLE_ZERO  =  Angle( 0, 0, 0 )
+
+local ANGLE_ZERO = Angle( 0, 0, 0 )
+local ANGLE_FRONT      = ANGLE_ZERO:Forward()
+local ANGLE_RIGHT      = ANGLE_ZERO:Right()
+local ANGLE_UP         = ANGLE_ZERO:Up()
+local ANGLE_BEHIND     = -ANGLE_FRONT
+local ANGLE_LEFT       = -ANGLE_RIGHT
+local ANGLE_DOWN       = -ANGLE_UP
 
 local TRANSPARENT = Color( 255, 255, 255, 150 )
 
@@ -146,11 +153,14 @@ local TRANSPARENT = Color( 255, 255, 255, 150 )
 -- Console Variables
 --------------------------------------------------------------------------]]--
 
-CreateConVar( "stacker_max_count",    30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
-CreateConVar( "stacker_max_offsetx", 500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_max_offsety", 500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_max_offsetz", 500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_stayinworld",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+CreateConVar( "stacker_max_count",        30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
+CreateConVar( "stacker_max_offsetx",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_max_offsety",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_max_offsetz",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
+CreateConVar( "stacker_stayinworld",       0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+CreateConVar( "stacker_force_freeze",      0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn frozen or not
+CreateConVar( "stacker_force_weld",        0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn welded or not
+CreateConVar( "stacker_force_nocollide",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn nocollided or not
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -220,6 +230,24 @@ elseif ( SERVER ) then
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
 		
 		RunConsoleCommand( "stacker_stayinworld", ( tobool( args[1] ) and 1 ) or 0 )
+	end )
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( "stacker_set_freeze", function( ply, cmd, args )
+		if ( !ValidateCommand( ply, args[1] ) ) then return false end
+		
+		RunConsoleCommand( "stacker_force_freeze", ( tobool( args[1] ) and 1 ) or 0 )
+	end )
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( "stacker_set_weld", function( ply, cmd, args )
+		if ( !ValidateCommand( ply, args[1] ) ) then return false end
+		
+		RunConsoleCommand( "stacker_force_weld", ( tobool( args[1] ) and 1 ) or 0 )
+	end )
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( "stacker_set_nocollide", function( ply, cmd, args )
+		if ( !ValidateCommand( ply, args[1] ) ) then return false end
+		
+		RunConsoleCommand( "stacker_force_nocollide", ( tobool( args[1] ) and 1 ) or 0 )
 	end )
 end
 
@@ -292,18 +320,21 @@ function TOOL:GetRotateAngle() return Angle( self:GetRotateP(), self:GetRotateY(
 --	Returns true if the stacked props should be spawned frozen.
 --]]--
 function TOOL:ShouldApplyFreeze() return self:GetClientNumber( "freeze" ) == 1 end
+function TOOL:ShouldForceFreeze() return GetConVarNumber( "stacker_force_freeze" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldWeld()
 --
 --	Returns true if the stacked props should be welded together.
 --]]--
 function TOOL:ShouldApplyWeld() return self:GetClientNumber( "weld" ) == 1 end
+function TOOL:ShouldForceWeld() return GetConVarNumber( "stacker_force_weld" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldNoCollide()
 --
 --	Returns true if the stacked props should be nocollided with each other.
 --]]--
 function TOOL:ShouldApplyNoCollide() return self:GetClientNumber( "nocollide" ) == 1 end
+function TOOL:ShouldForceNoCollide() return GetConVarNumber( "stacker_force_nocollide" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldStackRelative()
 --
@@ -532,6 +563,7 @@ function TOOL:LeftClick( trace )
 	end
 	
 	self:ApplyNoCollide( newEnts )
+	newEnts = nil
 	
 	undo.SetPlayer( ply )
 	undo.Finish()
@@ -547,6 +579,7 @@ end
 --]]--
 function TOOL:ApplyMaterial( ent, material )
 	if ( !self:ShouldApplyMaterial() ) then ent:SetMaterial( "" ) return end
+	
 	ent:SetMaterial( material )
 end
 
@@ -558,6 +591,7 @@ end
 --]]--
 function TOOL:ApplyColor( ent, color )
 	if ( !self:ShouldApplyColor() ) then return end
+	
 	ent:SetColor( color )
 end
 
@@ -568,7 +602,7 @@ end
 --	Attempts to spawn the stacked props frozen in place. If not, spawn them unfrozen.
 --]]--
 function TOOL:ApplyFreeze( ply, ent )
-	if ( self:ShouldApplyFreeze() ) then
+	if ( self:ShouldForceFreeze() or self:ShouldApplyFreeze() ) then
 			ply:AddFrozenPhysicsObject( ent, ent:GetPhysicsObject() )
 			ent:GetPhysicsObject():EnableMotion( false )
 	else
@@ -583,7 +617,8 @@ end
 --	Attempts to weld the new entity to the last entity
 --]]--
 function TOOL:ApplyWeld( lastEnt, newEnt )
-	if ( !self:ShouldApplyWeld() ) then return end
+	if ( !self:ShouldForceWeld() and !self:ShouldApplyWeld() ) then return end
+
 	constraint.Weld( lastEnt, newEnt, 0, 0, 0 )
 end
 
@@ -592,20 +627,18 @@ end
 -- 	TOOL:ApplyNoCollide( table )
 --
 --	Attempts to nocollide all stacker entities with one another.
---	This is roughly an O( N^2 ) operation since we need to nocollide N ents with N - 1 other ents.
+--	This is roughly an O( ![N-1] ) operation, better than the previous O ( N^2 ) version.
 --]]--
 function TOOL:ApplyNoCollide( stackerEnts )
-	if ( !self:ShouldApplyNoCollide() ) then return end
+	if ( !self:ShouldForceNoCollide() and !self:ShouldApplyNoCollide() ) then return end
+	if ( #stackerEnts == 1 ) then return end
+	if ( #stackerEnts == 2 ) then constraint.NoCollide( stackerEnts[1], stackerEnts[2], 0, 0 ) return end
 	
-	for _, stackerEnt in pairs( stackerEnts ) do
-		for _, otherEnt in pairs( stackerEnts ) do
-			if ( stackerEnt == otherEnt ) then continue end
-			
-			constraint.NoCollide( stackerEnt, otherEnt, 0, 0 )
+	for i = 1, #stackerEnts - 1 do
+		for j = i + 1, #stackerEnts do
+			constraint.NoCollide( stackerEnts[i], stackerEnts[j], 0, 0 )
 		end
 	end
-	
-	stackerEnts = nil
 end
 
 --[[--------------------------------------------------------------------------
@@ -632,30 +665,29 @@ end
 --]]--
 local CALC_POS = {
 	[MODE_WORLD] = {
-		[DIRECTION_UP]     = function( forward, upper, lower ) return forward:Up(),           math.abs( upper.z - lower.z ) end,
-		[DIRECTION_DOWN]   = function( forward, upper, lower ) return forward:Up() * -1,      math.abs( upper.z - lower.z ) end,
-		[DIRECTION_FRONT]  = function( forward, upper, lower ) return forward:Forward(),      math.abs( upper.x - lower.x ) end,
-		[DIRECTION_BEHIND] = function( forward, upper, lower ) return forward:Forward() * -1, math.abs( upper.x - lower.x ) end,
-		[DIRECTION_RIGHT]  = function( forward, upper, lower ) return forward:Right(),        math.abs( upper.y - lower.y ) end,
-		[DIRECTION_LEFT]   = function( forward, upper, lower ) return forward:Right() * -1,   math.abs( upper.y - lower.y ) end,
+		[DIRECTION_UP]     = function( hi, low ) return ANGLE_UP,     math.abs( hi.z - low.z ) end,
+		[DIRECTION_DOWN]   = function( hi, low ) return ANGLE_DOWN,   math.abs( hi.z - low.z ) end,
+		[DIRECTION_FRONT]  = function( hi, low ) return ANGLE_FRONT,  math.abs( hi.x - low.x ) end,
+		[DIRECTION_BEHIND] = function( hi, low ) return ANGLE_BEHIND, math.abs( hi.x - low.x ) end,
+		[DIRECTION_RIGHT]  = function( hi, low ) return ANGLE_RIGHT,  math.abs( hi.y - low.y ) end,
+		[DIRECTION_LEFT]   = function( hi, low ) return ANGLE_LEFT,   math.abs( hi.y - low.y ) end,
 	},
 	
 	[MODE_PROP] = {
-		[DIRECTION_UP]     = function( forward, offset, gupper, glower ) return forward:Up(),           math.abs( gupper.z - glower.z ), forward:Up() * offset.X + forward:Forward() * -1 * offset.Z + forward:Right() * offset.Y      end,
-		[DIRECTION_DOWN]   = function( forward, offset, gupper, glower ) return forward:Up() * -1,      math.abs( gupper.z - glower.z ), forward:Up() * -1 * offset.X + forward:Forward() * offset.Z + forward:Right() * offset.Y      end,
-		[DIRECTION_FRONT]  = function( forward, offset, gupper, glower ) return forward:Forward(),      math.abs( gupper.x - glower.x ), forward:Forward() * offset.X + forward:Up() * offset.Z + forward:Right() * offset.Y           end,
-		[DIRECTION_BEHIND] = function( forward, offset, gupper, glower ) return forward:Forward() * -1, math.abs( gupper.x - glower.x ), forward:Forward() * -1 * offset.X + forward:Up() * offset.Z + forward:Right() * -1 * offset.Y end,
-		[DIRECTION_RIGHT]  = function( forward, offset, gupper, glower ) return forward:Right(),        math.abs( gupper.y - glower.y ), forward:Right() * offset.X + forward:Up() * offset.Z + forward:Forward() * -1 * offset.Y      end,
-		[DIRECTION_LEFT]   = function( forward, offset, gupper, glower ) return forward:Right() * -1,   math.abs( gupper.y - glower.y ), forward:Right() * -1 * offset.X + forward:Up() * offset.Z + forward:Forward() * offset.Y      end,
+		[DIRECTION_UP]     = function( ang, offset, hi, low ) return ang:Up(),           math.abs( hi.z - low.z ), (ang:Up()      * offset.X     ) + (ang:Forward() * offset.Z * -1) + (ang:Right()   * offset.Y)      end,
+		[DIRECTION_DOWN]   = function( ang, offset, hi, low ) return ang:Up()      * -1, math.abs( hi.z - low.z ), (ang:Up()      * offset.X * -1) + (ang:Forward() * offset.Z     ) + (ang:Right()   * offset.Y)      end,
+		[DIRECTION_FRONT]  = function( ang, offset, hi, low ) return ang:Forward(),      math.abs( hi.x - low.x ), (ang:Forward() * offset.X     ) + (ang:Up()      * offset.Z     ) + (ang:Right()   * offset.Y)      end,
+		[DIRECTION_BEHIND] = function( ang, offset, hi, low ) return ang:Forward() * -1, math.abs( hi.x - low.x ), (ang:Forward() * offset.X * -1) + (ang:Up()      * offset.Z     ) + (ang:Right()   * offset.Y * -1) end,
+		[DIRECTION_RIGHT]  = function( ang, offset, hi, low ) return ang:Right(),        math.abs( hi.y - low.y ), (ang:Right()   * offset.X     ) + (ang:Up()      * offset.Z     ) + (ang:Forward() * offset.Y * -1) end,
+		[DIRECTION_LEFT]   = function( ang, offset, hi, low ) return ang:Right()   * -1, math.abs( hi.y - low.y ), (ang:Right()   * offset.X * -1) + (ang:Up()      * offset.Z     ) + (ang:Forward() * offset.Y)      end,
 	},
 }
 
 function TOOL:StackerCalcPos( ent, mode, dir, offset )
-	local lower, upper = ent:WorldSpaceAABB()
 	local height, direction
 	
 	if ( mode == MODE_WORLD ) then -- get the position relative to the world's directions
-		direction, height = CALC_POS[ mode ][ dir ]( ANGLE_ZERO, upper, lower )
+		direction, height = CALC_POS[ mode ][ dir ]( ent:WorldSpaceAABB() )
 	elseif ( mode == MODE_PROP ) then -- get the position relative to the prop's directions
 		direction, height, offset = CALC_POS[ mode ][ dir ]( ent:GetAngles(), offset, ent:OBBMaxs(), ent:OBBMins() )
 	end
@@ -768,8 +800,8 @@ function TOOL:UpdateGhostStack( ent )
 	local lastEnt = ent
 	local entPos = lastEnt:GetPos()
 	local entAng = lastEnt:GetAngles()
-	local entMat = ent:GetMaterial() or ""
-	local entCol = ent:GetColor() or TRANSPARENT
+	local entMat = ent:GetMaterial()
+	local entCol = ent:GetColor()
 	      entCol.a = 150
 	
 	local stackdir, height, thisoffset
