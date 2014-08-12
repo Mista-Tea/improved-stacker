@@ -847,28 +847,28 @@ end
 function TOOL.BuildCPanel( cpanel )
 	cpanel:AddControl( "Header", { Text = "#Tool.stacker.name", Description	= "#Tool.stacker.desc" } )
 	
-	cpanel:AddControl( "Checkbox", { Label = "Freeze Props",     Command = "stacker_freeze" } )
-	cpanel:AddControl( "Checkbox", { Label = "Weld Props",       Command = "stacker_weld" } )
-	cpanel:AddControl( "Checkbox", { Label = "No Collide Props", Command = "stacker_nocollide" } )
+	cpanel:AddControl( "Checkbox", { Label = "Freeze stacked props",     Command = "stacker_freeze" } )
+	cpanel:AddControl( "Checkbox", { Label = "Weld stacked props",       Command = "stacker_weld" } )
+	cpanel:AddControl( "Checkbox", { Label = "No-collide stacked props", Command = "stacker_nocollide" } )
 
-	local params = { Label = "Relative To:", MenuButton = "0", Options = {} }
+	local params = { Label = "Stack relative to:", MenuButton = "0", Options = {} }
 	params.Options[ "World" ] = { stacker_mode = "1" }
 	params.Options[ "Prop" ]  = { stacker_mode = "2" }
 	cpanel:AddControl( "ComboBox", params )
 
-	local params = { Label = "Stack Direction", MenuButton = "0", Options = {} }
-	params.Options[ "Up" ]     = { stacker_dir = "1" }
-	params.Options[ "Down" ]   = { stacker_dir = "2" }
-	params.Options[ "Front" ]  = { stacker_dir = "3" }
-	params.Options[ "Behind" ] = { stacker_dir = "4" }
-	params.Options[ "Right" ]  = { stacker_dir = "5" }
-	params.Options[ "Left" ]   = { stacker_dir = "6" }
+	local params = { Label = "Stack direction", MenuButton = "0", Options = {} }
+	params.Options[ "Up" ]     = { stacker_dir = DIRECTION_UP }
+	params.Options[ "Down" ]   = { stacker_dir = DIRECTION_DOWN }
+	params.Options[ "Front" ]  = { stacker_dir = DIRECTION_FRONT }
+	params.Options[ "Behind" ] = { stacker_dir = DIRECTION_BEHIND }
+	params.Options[ "Right" ]  = { stacker_dir = DIRECTION_RIGHT }
+	params.Options[ "Left" ]   = { stacker_dir = DIRECTION_LEFT }
 	cpanel:AddControl( "ComboBox", params )
+	
+	cpanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = GetConVarNumber( "stacker_max_count" ), Command = "stacker_count", Description = "How many props to create in each stack" } )
 
-	cpanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = GetConVarNumber( "stacker_max_count" ), Command = "stacker_count", Description = "How many props to stack." } )
-
-	cpanel:AddControl( "Header", { Text = "Advanced Options", Description = "These options are for advanced users. Leave them all default ( 0 ) if you don't understand what they do." }  )
-	cpanel:AddControl( "Button", { Label = "Reset Advanced Options", Command = "stacker_resetoffsets", Text = "Reset" } )
+	--cpanel:AddControl( "Header", { Text = "Advanced Options", Description = "These options are for advanced users. Leave them all default ( 0 ) if you don't understand what they do." }  )
+	cpanel:AddControl( "Button", { Label = "Reset offsets and rotations", Command = "stacker_resetoffsets", Text = "Reset" } )
 	
 	cpanel:AddControl( "Slider", { Label = "Offset X ( forward/back )", Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetx" ), Max = GetConVarNumber( "stacker_max_offsetx" ), Value = 0, Command = "stacker_offsetx" } )
 	cpanel:AddControl( "Slider", { Label = "Offset Y ( right/left )",   Type = "Float", Min = - GetConVarNumber( "stacker_max_offsety" ), Max = GetConVarNumber( "stacker_max_offsety" ), Value = 0, Command = "stacker_offsety" } )
@@ -877,7 +877,7 @@ function TOOL.BuildCPanel( cpanel )
 	cpanel:AddControl( "Slider", { Label = "Rotate Yaw",                Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_roty" } )
 	cpanel:AddControl( "Slider", { Label = "Rotate Roll",               Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotr" } )
 	
-	cpanel:AddControl( "Checkbox", { Label = "Stack relative to new rotation", Command = "stacker_recalc",    Description = "If this is checked, each item in the stack will be stacked relative to the previous item in the stack. This allows you to create curved stacks." } )
+	cpanel:AddControl( "Checkbox", { Label = "Stack relative to new rotation", Command = "stacker_recalc",    Description = "Stacks each prop relative to the prop right before it. This allows you to create curved stacks." } )
 	cpanel:AddControl( "Checkbox", { Label = "Apply material",                 Command = "stacker_material",  Description = "Applies the material of the original prop to all stacked props" } )
 	cpanel:AddControl( "Checkbox", { Label = "Apply color",                    Command = "stacker_color",     Description = "Applies the color of the original prop to all stacked props" } )
 	cpanel:AddControl( "Checkbox", { Label = "Apply physical properties",      Command = "stacker_physprop",  Description = "Applies the physical properties of the original prop to all stacked props" } )
