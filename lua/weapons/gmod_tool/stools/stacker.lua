@@ -571,8 +571,8 @@ function TOOL:LeftClick( trace )
 		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
 		-- remove or mark this entity so that those same functions (if overridden) can
 		-- detect that the entity came from Stacker
-		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil )             then continue end
-		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", self:GetOwner(), entMod, newEnt ) ~= nil ) then continue end
+		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil )             then break end
+		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", self:GetOwner(), entMod, newEnt ) ~= nil ) then break end
 
 		self:ApplyMaterial( newEnt, entMat )
 		self:ApplyColor( newEnt, entCol )
