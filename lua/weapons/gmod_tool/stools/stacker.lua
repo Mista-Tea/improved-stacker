@@ -10,11 +10,12 @@
 		Cleaned and optimized - Mista Tea
 		
 	Changelog:
-		- Added to GitHub   May  27th, 2014
-		- Added to Workshop May  28th, 2014
-		- Massive overhaul  June  5th, 2014
-		- Large update      July 24th, 2014
-		- Optimizations     Aug  12th, 2014
+		- Added to GitHub     May 27th, 2014
+		- Added to Workshop   May 28th, 2014
+		- Massive overhaul    Jun  5th, 2014
+		- Large update        Jul 24th, 2014
+		- Optimizations       Aug 12th, 2014
+		- Bug fixes/features  Jun 30th, 2015
 		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
@@ -23,6 +24,7 @@
 			- Fixed the halo option for ghosted props not working.
 			- Fixed massive FPS drop from halos being rendered in a Think hook instead of a PreDrawHalos hooks.
 				- Had to move back to using TOOL:Think
+			- Fixed materials and colors being saved when duping stacked props.
 			
 		Tweaks:
 			- Added convenience functions to retrieve the client convars.
@@ -34,27 +36,29 @@
 			- Modified NoCollide to actually no-collide each stacker prop with every other prop in the stack.
 			
 			- Added console variables for server operators to limit various parts of stacker.
-				> stacker_max_count < 0 / inf >
-				> stacker_max_offsetx < -inf / inf >
-				> stacker_max_offsety < -inf / inf >
-				> stacker_max_offsetz < -inf / inf >
-				> stacker_stayinworld < 0 / 1 >
-				> stacker_force_weld < 0 / 1 >
-				> stacker_force_freeze < 0 / 1 >
-				> stacker_force_nocollide < 0 / 1 >
-				> stacker_delay < 0 / inf >
+				> stacker_max_total       <-inf/inf>     (less than 0 == no limit)
+				> stacker_max_count       <-inf/inf>     (less than 0 == no limit)
+				> stacker_max_offsetx     <-inf/inf>
+				> stacker_max_offsety     <-inf/inf>
+				> stacker_max_offsetz     <-inf/inf>
+				> stacker_stayinworld        <0/1>
+				> stacker_force_weld         <0/1>
+				> stacker_force_freeze       <0/1>
+				> stacker_force_nocollide    <0/1>
+				> stacker_delay              <0/inf>
 
 			- Added console commands for server admins to control the console variables that limit stacker.
-				> stacker_set_maxcount < 0 / inf >
-				> stacker_set_maxoffset < -inf / inf >
-				> stacker_set_maxoffsetx < -inf / inf >
-				> stacker_set_maxoffsety < -inf / inf >
-				> stacker_set_maxoffsetz < -inf / inf >
-				> stacker_set_stayinworld < 0 / 1 >
-				> stacker_set_weld < 0 / 1 >
-				> stacker_set_freeze < 0 / 1 >
-				> stacker_set_nocollide < 0 / 1 >
-				> stacker_set_delay < 0 / inf >
+				> stacker_set_maxtotal    <-inf/inf>     (less than 0 == no limit)
+				> stacker_set_maxcount    <-inf/inf>     (less than 0 == no limit)
+				> stacker_set_maxoffset   <-inf/inf>
+				> stacker_set_maxoffsetx  <-inf/inf>
+				> stacker_set_maxoffsety  <-inf/inf>
+				> stacker_set_maxoffsetz  <-inf/inf>
+				> stacker_set_stayinworld    <0/1>
+				> stacker_set_weld           <0/1>
+				> stacker_set_freeze         <0/1>
+				> stacker_set_nocollide      <0/1>
+				> stacker_set_delay          <0/inf>
 
 ----------------------------------------------------------------------------]]
 
@@ -95,7 +99,7 @@ local RENDERMODE_TRANSALPHA = RENDERMODE_TRANSALPHA
 --------------------------------------------------------------------------]]--
 
 TOOL.Category   = "Construction"
-TOOL.Name       = "#Tool.stacker.name"
+TOOL.Name       = "#Tool.stackerimproved.name"
 TOOL.Command    = nil
 TOOL.ConfigName = ""
 
@@ -125,10 +129,10 @@ TOOL.ClientConVar[ "halo_a" ]    = "255"
 
 if ( CLIENT ) then
 
-	language.Add( "Tool.stacker.name", "Stacker" )
-	language.Add( "Tool.stacker.desc", "Allows you to easily stack props" )
-	language.Add( "Tool.stacker.0",    "Click to stack the prop you're pointing at." )
-	language.Add( "Undone_stacker",    "Undone stacked prop(s)" )
+	language.Add( "Tool.stackerimproved.name", "Stacker - Improved" )
+	language.Add( "Tool.stackerimproved.desc", "Easily stack duplicated props in any direction" )
+	language.Add( "Tool.stackerimproved.0",    "Click to stack the prop you're pointing at" )
+	language.Add( "Undone_stacker",            "Undone stacked prop(s)" )
 	
 end
 
@@ -148,13 +152,13 @@ local DIRECTION_LEFT   = 6
 
 local VECTOR_ZERO = Vector( 0, 0, 0 )
 
-local ANGLE_ZERO = Angle( 0, 0, 0 )
-local ANGLE_FRONT      = ANGLE_ZERO:Forward()
-local ANGLE_RIGHT      = ANGLE_ZERO:Right()
-local ANGLE_UP         = ANGLE_ZERO:Up()
-local ANGLE_BEHIND     = -ANGLE_FRONT
-local ANGLE_LEFT       = -ANGLE_RIGHT
-local ANGLE_DOWN       = -ANGLE_UP
+local ANGLE_ZERO   = Angle( 0, 0, 0 )
+local ANGLE_FRONT  = ANGLE_ZERO:Forward()
+local ANGLE_RIGHT  = ANGLE_ZERO:Right()
+local ANGLE_UP     = ANGLE_ZERO:Up()
+local ANGLE_BEHIND = -ANGLE_FRONT
+local ANGLE_LEFT   = -ANGLE_RIGHT
+local ANGLE_DOWN   = -ANGLE_UP
 
 local TRANSPARENT = Color( 255, 255, 255, 150 )
 
@@ -162,15 +166,16 @@ local TRANSPARENT = Color( 255, 255, 255, 150 )
 -- Console Variables
 --------------------------------------------------------------------------]]--
 
-CreateConVar( "stacker_max_count",        30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
-CreateConVar( "stacker_max_offsetx",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_max_offsety",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_max_offsetz",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
-CreateConVar( "stacker_stayinworld",       0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
-CreateConVar( "stacker_force_freeze",      0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn frozen or not
-CreateConVar( "stacker_force_weld",        0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn welded or not
-CreateConVar( "stacker_force_nocollide",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn nocollided or not
-CreateConVar( "stacker_delay",             0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines the amount of time that must pass before a player can use stacker again
+local cvarMaxTotal    = CreateConVar( "stacker_max_total",        -1, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that a player can have spawned from stacker
+local cvarMaxCount    = CreateConVar( "stacker_max_count",        30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
+local cvarMaxOffX     = CreateConVar( "stacker_max_offsetx",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
+local cvarMaxOffY     = CreateConVar( "stacker_max_offsety",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
+local cvarMaxOffZ     = CreateConVar( "stacker_max_offsetz",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
+local cvarStayInWorld = CreateConVar( "stacker_stayinworld",       0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+local cvarFreeze      = CreateConVar( "stacker_force_freeze",      0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn frozen or not
+local cvarWeld        = CreateConVar( "stacker_force_weld",        0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn welded or not
+local cvarNoCollide   = CreateConVar( "stacker_force_nocollide",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn nocollided or not
+local cvarDelay       = CreateConVar( "stacker_delay",             0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines the amount of time that must pass before a player can use stacker again
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -198,11 +203,15 @@ if ( CLIENT ) then
 elseif ( SERVER ) then
 
 	local function ValidateCommand( ply, arg )
-		if ( IsValid( ply ) and !ply:IsAdmin() ) then return false end
-		local count = tonumber( arg )
-		if ( !count or count < 0 ) then return false end
-		return true
+		if ( IsValid( ply ) and !ply:IsAdmin() ) then ply:PrintMessage( HUD_PRINTTALK, "You must be in the 'admin' usergroup to change this cvar" ) return false end
+		if ( !tonumber( arg ) ) then return false else return true end
 	end
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( "stacker_set_maxtotal", function( ply, cmd, args )
+		if ( !ValidateCommand( ply, args[1] ) ) then return false end
+
+		RunConsoleCommand( "stacker_max_total", args[1] )
+	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( "stacker_set_maxcount", function( ply, cmd, args )		
 		if ( !ValidateCommand( ply, args[1] ) ) then return false end
@@ -267,6 +276,19 @@ elseif ( SERVER ) then
 	end )
 end
 
+--[[--------------------------------------------------------------------------
+-- Hooks
+--------------------------------------------------------------------------]]--
+
+--[[--------------------------------------------------------------------------
+--  GAMEMODE:PlayerInitialSpawn()
+--
+--	Sets the newly connected player's total stacker ents to 0.
+--	See TOOL:IsExceedingMax() below for more details
+--]]--
+hook.Add( "PlayerInitialSpawn", "StackerSetTotalEnts", function( ply )
+	ply.TotalStackerEnts = 0
+end )
 
 
 --[[--------------------------------------------------------------------------
@@ -281,26 +303,93 @@ end
 local function GetGhostStack() return GhostStack       end
 local function SetGhostStack( tbl )   GhostStack = tbl end
 
+
+--[[--------------------------------------------------------------------------
+-- 	TOOL:IsExceedingMax()
+--
+--	Returns true if the player has exceeded the allowed maximum stacker prop count.
+--
+--	The total number of props a player has spawned from the Stacker tool is recorded
+--	on them via ply.TotalStackerEnts. When a player removes a prop that has been spawned
+--	from Stacker, the total count is decreased by 1.
+--
+--	In combination with the stacker_max_total cvar, this function can prevent players
+--	from crashing the server by stacking dozens of welded props and unfreezing them.
+--
+--	By default, the number of stacker props is -1 (infinite). This is done to not interfere
+--	with servers that don't want to limit the number of Stacker props a player can spawn directly.
+--	They may still hit cvars like sbox_maxprops before ever hitting stacker_max_total.
+--
+--	As an example case, if players are crashing your servers by spawning 50 welded chairs 
+--	and unfreezing them all at once, you can set stacker_max_total to 30 so that at any
+--	given time they can only have 30 props created by Stacker. Trying to stack any more props
+--	would give the player an error message.
+--]]--
+function TOOL:IsExceedingMax()
+	return cvarMaxTotal:GetInt() >= 0 and self:GetTotalStackerEnts() >= cvarMaxTotal:GetInt()
+end
+--[[--------------------------------------------------------------------------
+-- 	TOOL:SetTotalStackerEnts()
+--
+--	Sets the total number of active stacker props spawned by the player.
+--]]--
+function TOOL:SetTotalStackerEnts( num )
+	self:GetOwner().TotalStackerEnts = num
+end
+--[[--------------------------------------------------------------------------
+-- 	TOOL:GetTotalStackerEnts()
+--
+--	Retrieves the total number of active stacker props spawned by the player.
+--]]--
+function TOOL:GetTotalStackerEnts()
+	return self:GetOwner().TotalStackerEnts or 0
+end
+--[[--------------------------------------------------------------------------
+-- 	TOOL:IncrementStackerEnts()
+--
+--	Increases the number of active stacker props spawned by the player by 1.
+--]]--
+function TOOL:IncrementStackerEnts()
+	self:SetTotalStackerEnts( self:GetTotalStackerEnts() + 1 )
+end
+--[[--------------------------------------------------------------------------
+-- 	TOOL:DecrementStackerEnts()
+--
+--	Decreases the number of active stacked props spawned by the player by 1.
+--]]--
+function TOOL:DecrementStackerEnts()
+	self:SetTotalStackerEnts( self:GetTotalStackerEnts() - 1 )
+end
+
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetCount()
 --
---	Gets the maximum amount of props that can be stacked at a time
+--	Gets the amount of props that the client wants to stack at once.
 --]]--
 function TOOL:GetCount() 
-	return math.Clamp( self:GetClientNumber( "count" ), 0, GetConVarNumber( "stacker_max_count" ) ) 
+	return self:GetClientNumber( "count" )
+end
+
+--[[--------------------------------------------------------------------------
+-- 	TOOL:GetMaxCount()
+--
+--	Gets the maximum amount of props that can be stacked at a time.
+--]]--
+function TOOL:GetMaxCount()
+	return cvarMaxCount:GetInt()
 end
 
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetDirection()
 --
---	Gets the direction to stack the props
+--	Gets the direction to stack the props.
 --]]--
 function TOOL:GetDirection() return self:GetClientNumber( "dir" ) end
 
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetStackerMode()
 --
---	Gets the stacker mode (1 = MODE_WORLD, 2 = MODE_PROP)
+--	Gets the stacker mode (1 = MODE_WORLD, 2 = MODE_PROP).
 --]]--
 function TOOL:GetStackerMode() return self:GetClientNumber( "mode" ) end
 
@@ -311,9 +400,9 @@ function TOOL:GetStackerMode() return self:GetClientNumber( "mode" ) end
 --	These values are clamped to prevent server crashes from players
 --	using very high offset values.
 --]]--
-function TOOL:GetOffsetX() return math.Clamp( self:GetClientNumber( "offsetx" ), - GetConVarNumber( "stacker_max_offsetx" ), GetConVarNumber( "stacker_max_offsetx" ) ) end
-function TOOL:GetOffsetY() return math.Clamp( self:GetClientNumber( "offsety" ), - GetConVarNumber( "stacker_max_offsety" ), GetConVarNumber( "stacker_max_offsety" ) ) end
-function TOOL:GetOffsetZ() return math.Clamp( self:GetClientNumber( "offsetz" ), - GetConVarNumber( "stacker_max_offsetz" ), GetConVarNumber( "stacker_max_offsetz" ) ) end
+function TOOL:GetOffsetX() return math.Clamp( self:GetClientNumber( "offsetx" ), - cvarMaxOffX:GetInt(), cvarMaxOffX:GetInt() ) end
+function TOOL:GetOffsetY() return math.Clamp( self:GetClientNumber( "offsety" ), - cvarMaxOffY:GetInt(), cvarMaxOffY:GetInt() ) end
+function TOOL:GetOffsetZ() return math.Clamp( self:GetClientNumber( "offsetz" ), - cvarMaxOffZ:GetInt(), cvarMaxOffZ:GetInt() ) end
 
 function TOOL:GetOffsetVector() return Vector( self:GetOffsetX(), self:GetOffsetY(), self:GetOffsetZ() ) end
 
@@ -336,21 +425,21 @@ function TOOL:GetRotateAngle() return Angle( self:GetRotateP(), self:GetRotateY(
 --	Returns true if the stacked props should be spawned frozen.
 --]]--
 function TOOL:ShouldApplyFreeze() return self:GetClientNumber( "freeze" ) == 1 end
-function TOOL:ShouldForceFreeze() return GetConVarNumber( "stacker_force_freeze" ) == 1 end
+function TOOL:ShouldForceFreeze() return cvarFreeze:GetBool() end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldWeld()
 --
 --	Returns true if the stacked props should be welded together.
 --]]--
 function TOOL:ShouldApplyWeld() return self:GetClientNumber( "weld" ) == 1 end
-function TOOL:ShouldForceWeld() return GetConVarNumber( "stacker_force_weld" ) == 1 end
+function TOOL:ShouldForceWeld() return cvarWeld:GetBool() end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldNoCollide()
 --
 --	Returns true if the stacked props should be nocollided with each other.
 --]]--
 function TOOL:ShouldApplyNoCollide() return self:GetClientNumber( "nocollide" ) == 1 end
-function TOOL:ShouldForceNoCollide() return GetConVarNumber( "stacker_force_nocollide" ) == 1 end
+function TOOL:ShouldForceNoCollide() return cvarNoCollide:GetBool() end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldStackRelative()
 --
@@ -412,7 +501,7 @@ function TOOL:ShouldApplyPhysicalProperties() return self:GetClientNumber( "phys
 --	For example, if stacker_delay is set to 3, a player must wait 3 seconds in between each
 --	use of stacker's left click.
 --]]--
-function TOOL:GetDelay() return GetConVarNumber( "stacker_delay" ) end
+function TOOL:GetDelay() return cvarDelay:GetInt() end
 
 --[[--------------------------------------------------------------------------
 -- Tool Functions
@@ -515,11 +604,20 @@ function TOOL:LeftClick( trace )
 	if ( !IsValid( trace.Entity ) or trace.Entity:GetClass() ~= "prop_physics" ) then return false end
 	if ( CLIENT ) then return true end
 
-	local count = self:GetCount()
-	if ( count <= 0 ) then return false end
+	local ply = self:GetOwner()
 	
-	if ( self:GetOwner().LastStackTime and self:GetOwner().LastStackTime + self:GetDelay() > CurTime() ) then self:GetOwner():PrintMessage( HUD_PRINTTALK, "You are using stacker too quickly" ) return false end
-	self:GetOwner().LastStackTime = CurTime()
+	local count = self:GetCount()
+	local maxCount = self:GetMaxCount()
+	
+	-- check if the player's stack count is higher than the server's max allowed
+	if ( maxCount >= 0 ) then
+		if ( count > maxCount ) then ply:PrintMessage( HUD_PRINTTALK, "The max props that can be stacked at once is limited to " .. maxCount ) end
+		count = math.Clamp( count, 0, self:GetMaxCount() )
+	end
+	
+	-- check if the player is trying to use stacker too quickly
+	if ( ply.LastStackTime and ply.LastStackTime + self:GetDelay() > CurTime() ) then ply:PrintMessage( HUD_PRINTTALK, "You are using stacker too quickly" ) return false end
+	ply.LastStackTime = CurTime()
 	
 	local dir    = self:GetDirection()
 	local mode   = self:GetStackerMode()
@@ -527,9 +625,8 @@ function TOOL:LeftClick( trace )
 	local rotate = self:GetRotateAngle()
 
 	local stackRelative = self:ShouldStackRelative()
-	local stayInWorld   = GetConVarNumber( "stacker_stayinworld" ) == 1
+	local stayInWorld   = cvarStayInWorld:GetBool()
 
-	local ply = self:GetOwner()
 	local ent = trace.Entity
 
 	local entPos  = ent:GetPos()
@@ -538,18 +635,25 @@ function TOOL:LeftClick( trace )
 	local entSkin = ent:GetSkin()
 	local entMat  = ent:GetMaterial()
 	local entCol  = ent:GetColor()
+	local entRM   = ent:GetRenderMode()
+	local entRFX  = ent:GetRenderFX()
 	
 	local physMat  = ent:GetPhysicsObject():GetMaterial()
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
 	local lastEnt  = ent
 	local newEnts  = { ent }
+	
 	local newEnt
 	
 	undo.Create( "stacker" )
 	
 	for i = 1, count, 1 do
-		if ( !self:GetSWEP():CheckLimit( "props" ) )                           then break end
-		if ( hook.Run( "PlayerSpawnProp", self:GetOwner(), entMod ) == false ) then break end
+		-- check if the player has too many active stacker props spawned out already
+		if ( self:IsExceedingMax() ) then ply:PrintMessage( HUD_PRINTTALK, "Your active Stacker props exceed the 'stacker_max_total' cvar ("..cvarMaxTotal:GetInt()..")" ) break end
+		-- check if the player has exceeded the sbox_maxprops cvar
+		if ( !self:GetSWEP():CheckLimit( "props" ) )                         then break end
+		-- check if external admin mods are blocking this entity
+		if ( hook.Run( "PlayerSpawnProp", ply, entMod ) == false )           then break end
 		
 		if ( i == 1 or ( mode == MODE_PROP and stackRelative ) ) then
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
@@ -558,6 +662,7 @@ function TOOL:LeftClick( trace )
 		entPos = entPos + stackdir * height + thisoffset
 		entAng = entAng + rotate
 		
+		-- check if the stacked props would be spawned outside of the world
 		if ( stayInWorld and !util.IsInWorld( entPos ) ) then ply:PrintMessage( HUD_PRINTTALK, "Stacked props must be spawned within the world" ) break end
 		
 		newEnt = ents.Create( "prop_physics" )
@@ -571,11 +676,22 @@ function TOOL:LeftClick( trace )
 		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
 		-- remove or mark this entity so that those same functions (if overridden) can
 		-- detect that the entity came from Stacker
-		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, self:GetOwner() ) ~= nil )             then break end
-		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", self:GetOwner(), entMod, newEnt ) ~= nil ) then break end
-
+		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil )             then break end
+		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
+		
+		-- increase the total number of active stacker props spawned by the player by 1
+		self:IncrementStackerEnts()
+		
+		-- decrement the total number of active stacker props spawned by the player by 1
+		-- when the prop gets removed in any way
+		newEnt:CallOnRemove( "UpdateStackerTotal", function( ent, ply )
+			-- don't call self:DecrementStackerEnts() here
+			-- the way the gmod_tool STool was written would most likely cause using 'self' here to break
+			ply.TotalStackerEnts = ply.TotalStackerEnts - 1
+		end, ply )
+		
 		self:ApplyMaterial( newEnt, entMat )
-		self:ApplyColor( newEnt, entCol )
+		self:ApplyColor( newEnt, entCol, entRM, entRFX )
 		self:ApplyFreeze( ply, newEnt )
 		self:ApplyWeld( lastEnt, newEnt )
 		
@@ -606,7 +722,12 @@ end
 function TOOL:ApplyMaterial( ent, material )
 	if ( !self:ShouldApplyMaterial() ) then ent:SetMaterial( "" ) return end
 	
+	-- From gamemodes/sandbox/entities/weapons/gmod_tool/stools/material.lua
+	-- Make sure this is in the 'allowed' list in multiplayer - to stop people using exploits
+	if ( not game.SinglePlayer() and not list.Contains( "OverrideMaterials", material ) and material ~= "" ) then return end
+
 	ent:SetMaterial( material )
+	duplicator.StoreEntityModifier( ent, "material", { MaterialOverride = material } )
 end
 
 --[[--------------------------------------------------------------------------
@@ -615,10 +736,13 @@ end
 --
 --	Attempts to apply the original entity's color onto the stacked props.
 --]]--
-function TOOL:ApplyColor( ent, color )
+function TOOL:ApplyColor( ent, color, renderMode, renderFX )
 	if ( !self:ShouldApplyColor() ) then return end
 	
 	ent:SetColor( color )
+	ent:SetRenderMode( renderMode )
+	ent:SetRenderFX( renderFX )
+	duplicator.StoreEntityModifier( ent, "colour", { Color = color, RenderMode = renderMode, RenderFX = renderFX } )
 end
 
 --[[--------------------------------------------------------------------------
@@ -691,21 +815,21 @@ end
 --]]--
 local CALC_POS = {
 	[MODE_WORLD] = {
-		[DIRECTION_UP]     = function( hi, low ) return ANGLE_UP,     math.abs( hi.z - low.z ) end,
-		[DIRECTION_DOWN]   = function( hi, low ) return ANGLE_DOWN,   math.abs( hi.z - low.z ) end,
-		[DIRECTION_FRONT]  = function( hi, low ) return ANGLE_FRONT,  math.abs( hi.x - low.x ) end,
-		[DIRECTION_BEHIND] = function( hi, low ) return ANGLE_BEHIND, math.abs( hi.x - low.x ) end,
-		[DIRECTION_RIGHT]  = function( hi, low ) return ANGLE_RIGHT,  math.abs( hi.y - low.y ) end,
-		[DIRECTION_LEFT]   = function( hi, low ) return ANGLE_LEFT,   math.abs( hi.y - low.y ) end,
+		[DIRECTION_UP]     = function( hi, lo ) return ANGLE_UP,     math.abs( hi.z - lo.z ) end,
+		[DIRECTION_DOWN]   = function( hi, lo ) return ANGLE_DOWN,   math.abs( hi.z - lo.z ) end,
+		[DIRECTION_FRONT]  = function( hi, lo ) return ANGLE_FRONT,  math.abs( hi.x - lo.x ) end,
+		[DIRECTION_BEHIND] = function( hi, lo ) return ANGLE_BEHIND, math.abs( hi.x - lo.x ) end,
+		[DIRECTION_RIGHT]  = function( hi, lo ) return ANGLE_RIGHT,  math.abs( hi.y - lo.y ) end,
+		[DIRECTION_LEFT]   = function( hi, lo ) return ANGLE_LEFT,   math.abs( hi.y - lo.y ) end,
 	},
 	
 	[MODE_PROP] = {
-		[DIRECTION_UP]     = function( ang, offset, hi, low ) return ang:Up(),           math.abs( hi.z - low.z ), (ang:Up()      * offset.X     ) + (ang:Forward() * offset.Z * -1) + (ang:Right()   * offset.Y)      end,
-		[DIRECTION_DOWN]   = function( ang, offset, hi, low ) return ang:Up()      * -1, math.abs( hi.z - low.z ), (ang:Up()      * offset.X * -1) + (ang:Forward() * offset.Z     ) + (ang:Right()   * offset.Y)      end,
-		[DIRECTION_FRONT]  = function( ang, offset, hi, low ) return ang:Forward(),      math.abs( hi.x - low.x ), (ang:Forward() * offset.X     ) + (ang:Up()      * offset.Z     ) + (ang:Right()   * offset.Y)      end,
-		[DIRECTION_BEHIND] = function( ang, offset, hi, low ) return ang:Forward() * -1, math.abs( hi.x - low.x ), (ang:Forward() * offset.X * -1) + (ang:Up()      * offset.Z     ) + (ang:Right()   * offset.Y * -1) end,
-		[DIRECTION_RIGHT]  = function( ang, offset, hi, low ) return ang:Right(),        math.abs( hi.y - low.y ), (ang:Right()   * offset.X     ) + (ang:Up()      * offset.Z     ) + (ang:Forward() * offset.Y * -1) end,
-		[DIRECTION_LEFT]   = function( ang, offset, hi, low ) return ang:Right()   * -1, math.abs( hi.y - low.y ), (ang:Right()   * offset.X * -1) + (ang:Up()      * offset.Z     ) + (ang:Forward() * offset.Y)      end,
+		[DIRECTION_UP]     = function( ang, offset, hi, lo ) return  ang:Up(),      math.abs( hi.z - lo.z ), ( ang:Up()      * offset.X) + (-ang:Forward() * offset.Z) + ( ang:Right()   * offset.Y) end,
+		[DIRECTION_DOWN]   = function( ang, offset, hi, lo ) return -ang:Up(),      math.abs( hi.z - lo.z ), (-ang:Up()      * offset.X) + ( ang:Forward() * offset.Z) + ( ang:Right()   * offset.Y) end,
+		[DIRECTION_FRONT]  = function( ang, offset, hi, lo ) return  ang:Forward(), math.abs( hi.x - lo.x ), ( ang:Forward() * offset.X) + ( ang:Up()      * offset.Z) + ( ang:Right()   * offset.Y) end,
+		[DIRECTION_BEHIND] = function( ang, offset, hi, lo ) return -ang:Forward(), math.abs( hi.x - lo.x ), (-ang:Forward() * offset.X) + ( ang:Up()      * offset.Z) + (-ang:Right()   * offset.Y) end,
+		[DIRECTION_RIGHT]  = function( ang, offset, hi, lo ) return  ang:Right(),   math.abs( hi.y - lo.y ), ( ang:Right()   * offset.X) + ( ang:Up()      * offset.Z) + (-ang:Forward() * offset.Y) end,
+		[DIRECTION_LEFT]   = function( ang, offset, hi, lo ) return -ang:Right(),   math.abs( hi.y - lo.y ), (-ang:Right()   * offset.X) + ( ang:Up()      * offset.Z) + ( ang:Forward() * offset.Y) end,
 	},
 }
 
@@ -903,7 +1027,7 @@ end
 --	the stacker menu.
 --]]--
 function TOOL.BuildCPanel( cpanel )
-	cpanel:AddControl( "Header", { Text = "#Tool.stacker.name", Description	= "#Tool.stacker.desc" } )
+	cpanel:AddControl( "Header", { Text = "#Tool.stackerimproved.name", Description	= "#Tool.stackerimproved.desc" } )
 	
 	cpanel:AddControl( "Checkbox", { Label = "Freeze stacked props",     Command = "stacker_freeze" } )
 	cpanel:AddControl( "Checkbox", { Label = "Weld stacked props",       Command = "stacker_weld" } )
@@ -923,14 +1047,14 @@ function TOOL.BuildCPanel( cpanel )
 	params.Options[ "Left" ]   = { stacker_dir = DIRECTION_LEFT }
 	cpanel:AddControl( "ComboBox", params )
 	
-	cpanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = GetConVarNumber( "stacker_max_count" ), Command = "stacker_count", Description = "How many props to create in each stack" } )
+	cpanel:AddControl( "Slider", { Label = "Count",Type = "Integer", Min = 1, Max = cvarMaxCount:GetInt(), Command = "stacker_count", Description = "How many props to create in each stack" } )
 
 	--cpanel:AddControl( "Header", { Text = "Advanced Options", Description = "These options are for advanced users. Leave them all default ( 0 ) if you don't understand what they do." }  )
 	cpanel:AddControl( "Button", { Label = "Reset offsets and rotations", Command = "stacker_resetoffsets", Text = "Reset" } )
 	
-	cpanel:AddControl( "Slider", { Label = "Offset X ( forward/back )", Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetx" ), Max = GetConVarNumber( "stacker_max_offsetx" ), Value = 0, Command = "stacker_offsetx" } )
-	cpanel:AddControl( "Slider", { Label = "Offset Y ( right/left )",   Type = "Float", Min = - GetConVarNumber( "stacker_max_offsety" ), Max = GetConVarNumber( "stacker_max_offsety" ), Value = 0, Command = "stacker_offsety" } )
-	cpanel:AddControl( "Slider", { Label = "Offset Z ( up/down )",      Type = "Float", Min = - GetConVarNumber( "stacker_max_offsetz" ), Max = GetConVarNumber( "stacker_max_offsetz" ), Value = 0, Command = "stacker_offsetz" } )
+	cpanel:AddControl( "Slider", { Label = "Offset X ( forward/back )", Type = "Float", Min = - cvarMaxOffX:GetInt(), Max = cvarMaxOffX:GetInt(), Value = 0, Command = "stacker_offsetx" } )
+	cpanel:AddControl( "Slider", { Label = "Offset Y ( right/left )",   Type = "Float", Min = - cvarMaxOffY:GetInt(), Max = cvarMaxOffY:GetInt(), Value = 0, Command = "stacker_offsety" } )
+	cpanel:AddControl( "Slider", { Label = "Offset Z ( up/down )",      Type = "Float", Min = - cvarMaxOffZ:GetInt(), Max = cvarMaxOffZ:GetInt(), Value = 0, Command = "stacker_offsetz" } )
 	cpanel:AddControl( "Slider", { Label = "Rotate Pitch",              Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotp" } )
 	cpanel:AddControl( "Slider", { Label = "Rotate Yaw",                Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_roty" } )
 	cpanel:AddControl( "Slider", { Label = "Rotate Roll",               Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotr" } )
