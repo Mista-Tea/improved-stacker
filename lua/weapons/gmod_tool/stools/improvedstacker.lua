@@ -16,6 +16,7 @@
 		- Large update        Jul 24th, 2014
 		- Optimizations       Aug 12th, 2014
 		- Bug fixes/features  Jun 30th, 2015
+		- Bug fixes           Jul 11th, 2015
 		
 		Fixes:
 			- Prevents crash from players using very high X/Y/Z offset values.
@@ -66,8 +67,8 @@
 -- Localized Functions & Variables
 --------------------------------------------------------------------------]]--
 
--- localizing globals is an encouraged practice that inproves code efficiency,
--- accessing a local value is considerably faster than a global value
+-- localizing global functions/tables is an encouraged practice that improves code efficiency,
+-- since accessing a local value is considerably faster than a global value
 local bit = bit
 local util = util
 local math = math
@@ -685,9 +686,11 @@ function TOOL:LeftClick( trace )
 		-- decrement the total number of active stacker props spawned by the player by 1
 		-- when the prop gets removed in any way
 		newEnt:CallOnRemove( "UpdateStackerTotal", function( ent, ply )
+			-- if the player is no longer connected, there is nothing to do
+			if ( !IsValid( ply ) ) then return end
 			-- don't call self:DecrementStackerEnts() here
 			-- the way the gmod_tool STool was written would most likely cause using 'self' here to break
-			ply.TotalStackerEnts = ply.TotalStackerEnts - 1
+			ply.TotalStackerEnts = ( ply.TotalStackerEnts and ply.TotalStackerEnts - 1 ) or 0
 		end, ply )
 		
 		self:ApplyMaterial( newEnt, entMat )
