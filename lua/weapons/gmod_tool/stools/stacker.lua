@@ -2,7 +2,7 @@
 	Improved Stacker
 	
 	File name:
-		improvedstacker.lua
+		stacker.lua
 		
 	Author:
 		Original              - OverloadUT
@@ -100,7 +100,7 @@ local RENDERMODE_TRANSALPHA = RENDERMODE_TRANSALPHA
 --------------------------------------------------------------------------]]--
 
 TOOL.Category   = "Construction"
-TOOL.Name       = "#Tool.improvedstacker.name"
+TOOL.Name       = "#Tool.stacker.name"
 TOOL.Command    = nil
 TOOL.ConfigName = ""
 
@@ -130,9 +130,9 @@ TOOL.ClientConVar[ "halo_a" ]    = "255"
 
 if ( CLIENT ) then
 
-	language.Add( "Tool.improvedstacker.name", "Stacker - Improved" )
-	language.Add( "Tool.improvedstacker.desc", "Easily stack duplicated props in any direction" )
-	language.Add( "Tool.improvedstacker.0",    "Click to stack the prop you're pointing at" )
+	language.Add( "Tool.stacker.name", "Stacker - Improved" )
+	language.Add( "Tool.stacker.desc", "Easily stack duplicated props in any direction" )
+	language.Add( "Tool.stacker.0",    "Click to stack the prop you're pointing at" )
 	language.Add( "Undone_stacker",            "Undone stacked prop(s)" )
 	
 end
@@ -580,7 +580,7 @@ end]]
 --	will be called way more than it needs to be and causes horrible FPS drop in singleplayer.
 --]]--
 --[[function TOOL:AddHalos()
-	hook.Add( "PreDrawHalos", "improvedstacker.predrawhalos", function()
+	hook.Add( "PreDrawHalos", "stacker.predrawhalos", function()
 		if ( !IsValid( LocalPlayer() ) )         then return end
 		if ( !LocalPlayer():Alive() )            then return end
 		if ( !IsValid( LocalPlayer():GetActiveWeapon() ) or LocalPlayer():GetActiveWeapon():GetClass() ~= "gmod_tool" ) then return end
@@ -592,7 +592,7 @@ end]]
 
 		halo.Add( ghoststack, self:GetHaloColor() )
 	end )
-	hook.Remove( "PreDrawHalos", "improvedstacker.predrawhalos" )
+	hook.Remove( "PreDrawHalos", "stacker.predrawhalos" )
 end]]
 
 --[[--------------------------------------------------------------------------
@@ -1030,7 +1030,7 @@ end
 --	the stacker menu.
 --]]--
 function TOOL.BuildCPanel( cpanel )
-	cpanel:AddControl( "Header", { Text = "#Tool.improvedstacker.name", Description	= "#Tool.improvedstacker.desc" } )
+	cpanel:AddControl( "Header", { Text = "#Tool.stacker.name", Description	= "#Tool.stacker.desc" } )
 	
 	cpanel:AddControl( "Checkbox", { Label = "Freeze stacked props",     Command = "stacker_freeze" } )
 	cpanel:AddControl( "Checkbox", { Label = "Weld stacked props",       Command = "stacker_weld" } )
