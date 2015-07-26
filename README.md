@@ -1,11 +1,11 @@
 #Improved Stacker
 
-#Author:
+###Author:
 	Original              - OverloadUT
 	Updated for GMod 13   - Marii
 	Cleaned and optimized - Mista Tea
 	
-#Changelog:
+###Changelog:
 	- Added to GitHub     May 27th, 2014
 	- Added to Workshop   May 28th, 2014
 	- Massive overhaul    Jun  5th, 2014
@@ -14,7 +14,7 @@
 	- Bug fixes/features  Jun 30th, 2015
 	- Bug fixes           Jul 11th, 2015
 
-#Fixes:
+###Fixes:
 	- Prevents crash from players using very high X/Y/Z offset values.
 	- Prevents crash from players using very high P/Y/R rotate values.
 	- Prevents crash from very specific constraint settings.
@@ -23,7 +23,7 @@
 		- Had to move back to using TOOL:Think
 	- Fixed materials and colors being saved when duping stacked props.
 	
-#Tweaks:
+###Tweaks:
 	- Added convenience functions to retrieve the client convars.
 	- Added option to enable/disable automatically applying materials to the stacked props.
 	- Added option to enable/disable automatically applying colors to the stacked props.
