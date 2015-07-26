@@ -100,7 +100,7 @@ local RENDERMODE_TRANSALPHA = RENDERMODE_TRANSALPHA
 --------------------------------------------------------------------------]]--
 
 TOOL.Category   = "Construction"
-TOOL.Name       = "#Tool.stackerimproved.name"
+TOOL.Name       = "#Tool.improvedstacker.name"
 TOOL.Command    = nil
 TOOL.ConfigName = ""
 
@@ -130,9 +130,9 @@ TOOL.ClientConVar[ "halo_a" ]    = "255"
 
 if ( CLIENT ) then
 
-	language.Add( "Tool.stackerimproved.name", "Stacker - Improved" )
-	language.Add( "Tool.stackerimproved.desc", "Easily stack duplicated props in any direction" )
-	language.Add( "Tool.stackerimproved.0",    "Click to stack the prop you're pointing at" )
+	language.Add( "Tool.improvedstacker.name", "Stacker - Improved" )
+	language.Add( "Tool.improvedstacker.desc", "Easily stack duplicated props in any direction" )
+	language.Add( "Tool.improvedstacker.0",    "Click to stack the prop you're pointing at" )
 	language.Add( "Undone_stacker",            "Undone stacked prop(s)" )
 	
 end
@@ -1030,7 +1030,7 @@ end
 --	the stacker menu.
 --]]--
 function TOOL.BuildCPanel( cpanel )
-	cpanel:AddControl( "Header", { Text = "#Tool.stackerimproved.name", Description	= "#Tool.stackerimproved.desc" } )
+	cpanel:AddControl( "Header", { Text = "#Tool.improvedstacker.name", Description	= "#Tool.improvedstacker.desc" } )
 	
 	cpanel:AddControl( "Checkbox", { Label = "Freeze stacked props",     Command = "stacker_freeze" } )
 	cpanel:AddControl( "Checkbox", { Label = "Weld stacked props",       Command = "stacker_weld" } )
