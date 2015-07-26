@@ -2,7 +2,7 @@
 	Improved Stacker
 	
 	File name:
-		stacker.lua
+		improvedstacker.lua
 		
 	Author:
 		Original              - OverloadUT
