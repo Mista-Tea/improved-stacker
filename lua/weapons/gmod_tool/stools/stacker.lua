@@ -635,10 +635,13 @@ function TOOL:LeftClick( trace )
 	local entMod  = ent:GetModel()
 	local entSkin = ent:GetSkin()
 	local entMat  = ent:GetMaterial()
-	local entCol  = ent:GetColor()
-	local entRM   = ent:GetRenderMode()
-	local entRFX  = ent:GetRenderFX()
-	
+
+	local colorData = {
+		Color      = ent:GetColor(), 
+		RenderMode = ent:GetRenderMode(), 
+		RenderFX   = ent:GetRenderFX()
+	}
+
 	local physMat  = ent:GetPhysicsObject():GetMaterial()
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
 	local lastEnt  = ent
@@ -679,7 +682,7 @@ function TOOL:LeftClick( trace )
 		-- detect that the entity came from Stacker
 		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil )             then break end
 		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
-		
+
 		-- increase the total number of active stacker props spawned by the player by 1
 		self:IncrementStackerEnts()
 		
@@ -694,7 +697,7 @@ function TOOL:LeftClick( trace )
 		end, ply )
 		
 		self:ApplyMaterial( newEnt, entMat )
-		self:ApplyColor( newEnt, entCol, entRM, entRFX )
+		self:ApplyColor( newEnt, colorData )
 		self:ApplyFreeze( ply, newEnt )
 		self:ApplyWeld( lastEnt, newEnt )
 		
@@ -739,13 +742,14 @@ end
 --
 --	Attempts to apply the original entity's color onto the stacked props.
 --]]--
-function TOOL:ApplyColor( ent, color, renderMode, renderFX )
+function TOOL:ApplyColor( ent, data )
 	if ( !self:ShouldApplyColor() ) then return end
+
+	ent:SetColor( data.Color )
+	ent:SetRenderMode( data.RenderMode )
+	ent:SetRenderFX( data.RenderFX )
 	
-	ent:SetColor( color )
-	ent:SetRenderMode( renderMode )
-	ent:SetRenderFX( renderFX )
-	duplicator.StoreEntityModifier( ent, "colour", { Color = color, RenderMode = renderMode, RenderFX = renderFX } )
+	duplicator.StoreEntityModifier( ent, "colour", table.Copy( data ) )
 end
 
 --[[--------------------------------------------------------------------------
