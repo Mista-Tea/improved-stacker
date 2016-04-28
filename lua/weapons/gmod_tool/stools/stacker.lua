@@ -167,16 +167,27 @@ local TRANSPARENT = Color( 255, 255, 255, 150 )
 -- Console Variables
 --------------------------------------------------------------------------]]--
 
-local cvarMaxTotal    = CreateConVar( "stacker_max_total",        -1, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that a player can have spawned from stacker
-local cvarMaxCount    = CreateConVar( "stacker_max_count",        30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
-local cvarMaxOffX     = CreateConVar( "stacker_max_offsetx",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-local cvarMaxOffY     = CreateConVar( "stacker_max_offsety",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-local cvarMaxOffZ     = CreateConVar( "stacker_max_offsetz",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
-local cvarStayInWorld = CreateConVar( "stacker_stayinworld",       0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
-local cvarFreeze      = CreateConVar( "stacker_force_freeze",      0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn frozen or not
-local cvarWeld        = CreateConVar( "stacker_force_weld",        0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn welded or not
-local cvarNoCollide   = CreateConVar( "stacker_force_nocollide",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn nocollided or not
-local cvarDelay       = CreateConVar( "stacker_delay",             0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines the amount of time that must pass before a player can use stacker again
+-- Preemptively adding FCVAR_ARCHIVE for future backward-compatibility with the upcoming update.
+-- Archive the server settings so that when we switch over to the new stacker_improved cvars,
+-- they will properly carry over
+local cvarFlags
+
+if ( SERVER ) then
+	cvarFlags = { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE }
+elseif ( CLIENT ) then
+	cvarFlags = { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY }
+end
+
+local cvarMaxTotal    = CreateConVar( "stacker_max_total",        -1, cvarFlags ) -- defines the max amount of props that a player can have spawned from stacker
+local cvarMaxCount    = CreateConVar( "stacker_max_count",        30, cvarFlags ) -- defines the max amount of props that can be stacked at a time
+local cvarMaxOffX     = CreateConVar( "stacker_max_offsetx",     500, cvarFlags ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
+local cvarMaxOffY     = CreateConVar( "stacker_max_offsety",     500, cvarFlags ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
+local cvarMaxOffZ     = CreateConVar( "stacker_max_offsetz",     500, cvarFlags ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
+local cvarStayInWorld = CreateConVar( "stacker_stayinworld",       0, cvarFlags ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+local cvarFreeze      = CreateConVar( "stacker_force_freeze",      0, cvarFlags ) -- determines whether props should be forced to spawn frozen or not
+local cvarWeld        = CreateConVar( "stacker_force_weld",        0, cvarFlags ) -- determines whether props should be forced to spawn welded or not
+local cvarNoCollide   = CreateConVar( "stacker_force_nocollide",   0, cvarFlags ) -- determines whether props should be forced to spawn nocollided or not
+local cvarDelay       = CreateConVar( "stacker_delay",             0, cvarFlags ) -- determines the amount of time that must pass before a player can use stacker again
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
