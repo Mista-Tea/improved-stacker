@@ -426,9 +426,9 @@ function TOOL:GetOffsetVector() return Vector( self:GetOffsetX(), self:GetOffset
 --	These values are clamped to prevent server crashes from players
 --	using very high rotation values.
 --]]--
-function TOOL:GetRotateP() return math.Clamp( self:GetClientNumber( "rotp" ), -360, 360 ) end
-function TOOL:GetRotateY() return math.Clamp( self:GetClientNumber( "roty" ), -360, 360 ) end
-function TOOL:GetRotateR() return math.Clamp( self:GetClientNumber( "rotr" ), -360, 360 ) end
+function TOOL:GetRotateP() return math.Clamp( self:GetClientNumber( "rotp" ), -180, 180 ) end
+function TOOL:GetRotateY() return math.Clamp( self:GetClientNumber( "roty" ), -180, 180 ) end
+function TOOL:GetRotateR() return math.Clamp( self:GetClientNumber( "rotr" ), -180, 180 ) end
 
 function TOOL:GetRotateAngle() return Angle( self:GetRotateP(), self:GetRotateY(), self:GetRotateR() ) end
 
@@ -1080,9 +1080,9 @@ function TOOL.BuildCPanel( cpanel )
 	cpanel:AddControl( "Slider", { Label = "Offset X ( forward/back )", Type = "Float", Min = - cvarMaxOffX:GetInt(), Max = cvarMaxOffX:GetInt(), Value = 0, Command = "stacker_offsetx" } )
 	cpanel:AddControl( "Slider", { Label = "Offset Y ( right/left )",   Type = "Float", Min = - cvarMaxOffY:GetInt(), Max = cvarMaxOffY:GetInt(), Value = 0, Command = "stacker_offsety" } )
 	cpanel:AddControl( "Slider", { Label = "Offset Z ( up/down )",      Type = "Float", Min = - cvarMaxOffZ:GetInt(), Max = cvarMaxOffZ:GetInt(), Value = 0, Command = "stacker_offsetz" } )
-	cpanel:AddControl( "Slider", { Label = "Rotate Pitch",              Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotp" } )
-	cpanel:AddControl( "Slider", { Label = "Rotate Yaw",                Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_roty" } )
-	cpanel:AddControl( "Slider", { Label = "Rotate Roll",               Type = "Float", Min = -360,  Max = 360,  Value = 0, Command = "stacker_rotr" } )
+	cpanel:AddControl( "Slider", { Label = "Rotate Pitch",              Type = "Float", Min = -180,  Max = 180,  Value = 0, Command = "stacker_rotp" } )
+	cpanel:AddControl( "Slider", { Label = "Rotate Yaw",                Type = "Float", Min = -180,  Max = 180,  Value = 0, Command = "stacker_roty" } )
+	cpanel:AddControl( "Slider", { Label = "Rotate Roll",               Type = "Float", Min = -180,  Max = 180,  Value = 0, Command = "stacker_rotr" } )
 	
 	cpanel:AddControl( "Checkbox", { Label = "Stack relative to new rotation", Command = "stacker_recalc",    Description = "Stacks each prop relative to the prop right before it. This allows you to create curved stacks." } )
 	cpanel:AddControl( "Checkbox", { Label = "Apply material",                 Command = "stacker_material",  Description = "Applies the material of the original prop to all stacked props" } )
