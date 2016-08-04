@@ -167,16 +167,27 @@ local TRANSPARENT = Color( 255, 255, 255, 150 )
 -- Console Variables
 --------------------------------------------------------------------------]]--
 
-local cvarMaxTotal    = CreateConVar( "stacker_max_total",        -1, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that a player can have spawned from stacker
-local cvarMaxCount    = CreateConVar( "stacker_max_count",        30, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max amount of props that can be stacked at a time
-local cvarMaxOffX     = CreateConVar( "stacker_max_offsetx",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-local cvarMaxOffY     = CreateConVar( "stacker_max_offsety",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-local cvarMaxOffZ     = CreateConVar( "stacker_max_offsetz",     500, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
-local cvarStayInWorld = CreateConVar( "stacker_stayinworld",       0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
-local cvarFreeze      = CreateConVar( "stacker_force_freeze",      0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn frozen or not
-local cvarWeld        = CreateConVar( "stacker_force_weld",        0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn welded or not
-local cvarNoCollide   = CreateConVar( "stacker_force_nocollide",   0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines whether props should be forced to spawn nocollided or not
-local cvarDelay       = CreateConVar( "stacker_delay",             0, bit.bor( FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE ) ) -- determines the amount of time that must pass before a player can use stacker again
+-- Preemptively adding FCVAR_ARCHIVE for future backward-compatibility with the upcoming update.
+-- Archive the server settings so that when we switch over to the new stacker_improved cvars,
+-- they will properly carry over
+local cvarFlags
+
+if ( SERVER ) then
+	cvarFlags = { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY, FCVAR_ARCHIVE }
+elseif ( CLIENT ) then
+	cvarFlags = { FCVAR_REPLICATED, FCVAR_SERVER_CAN_EXECUTE, FCVAR_NOTIFY }
+end
+
+local cvarMaxTotal    = CreateConVar( "stacker_max_total",        -1, cvarFlags ) -- defines the max amount of props that a player can have spawned from stacker
+local cvarMaxCount    = CreateConVar( "stacker_max_count",        30, cvarFlags ) -- defines the max amount of props that can be stacked at a time
+local cvarMaxOffX     = CreateConVar( "stacker_max_offsetx",     500, cvarFlags ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
+local cvarMaxOffY     = CreateConVar( "stacker_max_offsety",     500, cvarFlags ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
+local cvarMaxOffZ     = CreateConVar( "stacker_max_offsetz",     500, cvarFlags ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
+local cvarStayInWorld = CreateConVar( "stacker_stayinworld",       0, cvarFlags ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+local cvarFreeze      = CreateConVar( "stacker_force_freeze",      0, cvarFlags ) -- determines whether props should be forced to spawn frozen or not
+local cvarWeld        = CreateConVar( "stacker_force_weld",        0, cvarFlags ) -- determines whether props should be forced to spawn welded or not
+local cvarNoCollide   = CreateConVar( "stacker_force_nocollide",   0, cvarFlags ) -- determines whether props should be forced to spawn nocollided or not
+local cvarDelay       = CreateConVar( "stacker_delay",             0, cvarFlags ) -- determines the amount of time that must pass before a player can use stacker again
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -635,10 +646,13 @@ function TOOL:LeftClick( trace )
 	local entMod  = ent:GetModel()
 	local entSkin = ent:GetSkin()
 	local entMat  = ent:GetMaterial()
-	local entCol  = ent:GetColor()
-	local entRM   = ent:GetRenderMode()
-	local entRFX  = ent:GetRenderFX()
-	
+
+	local colorData = {
+		Color      = ent:GetColor(), 
+		RenderMode = ent:GetRenderMode(), 
+		RenderFX   = ent:GetRenderFX()
+	}
+
 	local physMat  = ent:GetPhysicsObject():GetMaterial()
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
 	local lastEnt  = ent
@@ -679,7 +693,7 @@ function TOOL:LeftClick( trace )
 		-- detect that the entity came from Stacker
 		if ( !IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil )             then break end
 		if ( !IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
-		
+
 		-- increase the total number of active stacker props spawned by the player by 1
 		self:IncrementStackerEnts()
 		
@@ -694,7 +708,7 @@ function TOOL:LeftClick( trace )
 		end, ply )
 		
 		self:ApplyMaterial( newEnt, entMat )
-		self:ApplyColor( newEnt, entCol, entRM, entRFX )
+		self:ApplyColor( newEnt, colorData )
 		self:ApplyFreeze( ply, newEnt )
 		self:ApplyWeld( lastEnt, newEnt )
 		
@@ -739,13 +753,14 @@ end
 --
 --	Attempts to apply the original entity's color onto the stacked props.
 --]]--
-function TOOL:ApplyColor( ent, color, renderMode, renderFX )
+function TOOL:ApplyColor( ent, data )
 	if ( !self:ShouldApplyColor() ) then return end
+
+	ent:SetColor( data.Color )
+	ent:SetRenderMode( data.RenderMode )
+	ent:SetRenderFX( data.RenderFX )
 	
-	ent:SetColor( color )
-	ent:SetRenderMode( renderMode )
-	ent:SetRenderFX( renderFX )
-	duplicator.StoreEntityModifier( ent, "colour", { Color = color, RenderMode = renderMode, RenderFX = renderFX } )
+	duplicator.StoreEntityModifier( ent, "colour", table.Copy( data ) )
 end
 
 --[[--------------------------------------------------------------------------
