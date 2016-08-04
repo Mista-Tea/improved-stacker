@@ -26,6 +26,7 @@
 			- Fixed massive FPS drop from halos being rendered in a Think hook instead of a PreDrawHalos hooks.
 				- Had to move back to using TOOL:Think
 			- Fixed materials and colors being saved when duping stacked props.
+			- Fixed incorrect stack angles when trying to create a stack on an existing stack.
 			
 		Tweaks:
 			- Added convenience functions to retrieve the client convars.
@@ -674,8 +675,11 @@ function TOOL:LeftClick( trace )
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
 		end
 		
-		entPos = entPos + stackdir * height + thisoffset
-		entAng = entAng + rotate
+		entPos = entPos + (stackdir * height) + thisoffset
+		
+		entAng:RotateAroundAxis( entAng:Right(),   rotate.x )
+		entAng:RotateAroundAxis( entAng:Up(),      rotate.y )
+		entAng:RotateAroundAxis( entAng:Forward(), rotate.z )
 		
 		-- check if the stacked props would be spawned outside of the world
 		if ( stayInWorld and !util.IsInWorld( entPos ) ) then ply:PrintMessage( HUD_PRINTTALK, "Stacked props must be spawned within the world" ) break end
@@ -980,8 +984,11 @@ function TOOL:UpdateGhostStack( ent )
 			stackdir, height, thisoffset = self:StackerCalcPos( lastEnt, mode, dir, offset )
 		end
 
-		entPos = entPos + stackdir * height + thisoffset
-		entAng = entAng + rotate
+		entPos = entPos + (stackdir * height) + thisoffset
+		
+		entAng:RotateAroundAxis( entAng:Right(),   rotate.x )
+		entAng:RotateAroundAxis( entAng:Up(),      rotate.y )
+		entAng:RotateAroundAxis( entAng:Forward(), rotate.z )
 	
 		local ghost = ghoststack[ i ]
 		
