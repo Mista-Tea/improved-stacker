@@ -17,15 +17,17 @@
 		- Optimizations       Aug 12th, 2014
 		- Bug fixes/features  Jun 30th, 2015
 		- Bug fixes           Jul 11th, 2015
+		- Bug fixes           Oct 26th, 2015
+		- Bug fixes           Aug 3rd,  2015
 		
 		Fixes:
-			- Prevents crash from players using very high X/Y/Z offset values.
-			- Prevents crash from players using very high P/Y/R rotate values.
-			- Prevents crash from very specific constraint settings.
+			- Prevented crash from players using very high X/Y/Z offset values.
+			- Prevented crash from players using very high P/Y/R rotate values.
+			- Prevented crash from very specific constraint settings.
 			- Fixed the halo option for ghosted props not working.
 			- Fixed massive FPS drop from halos being rendered in a Think hook instead of a PreDrawHalos hooks.
 				- Had to move back to using TOOL:Think
-			- Fixed materials and colors being saved when duping stacked props.
+			- Fixed materials and color saving when duping stacked props.
 			- Fixed incorrect stack angles when trying to create a stack on an existing stack.
 			
 		Tweaks:
@@ -134,7 +136,7 @@ if ( CLIENT ) then
 	language.Add( "Tool.stacker.name", "Stacker - Improved" )
 	language.Add( "Tool.stacker.desc", "Easily stack duplicated props in any direction" )
 	language.Add( "Tool.stacker.0",    "Click to stack the prop you're pointing at" )
-	language.Add( "Undone_stacker",            "Undone stacked prop(s)" )
+	language.Add( "Undone_stacker",    "Undone stacked prop(s)" )
 	
 end
 
