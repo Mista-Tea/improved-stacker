@@ -989,7 +989,7 @@ function TOOL:UpdateGhostStack( ent )
 		entPos = entPos + (stackdir * height) + thisoffset
 		
 		entAng:RotateAroundAxis( entAng:Right(),   rotate.x )
-		entAng:RotateAroundAxis( entAng:Up(),      rotate.y )
+		entAng:RotateAroundAxis( entAng:Up(),     -rotate.y )
 		entAng:RotateAroundAxis( entAng:Forward(), rotate.z )
 	
 		local ghost = ghoststack[ i ]
