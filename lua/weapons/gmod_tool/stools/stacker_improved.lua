@@ -952,7 +952,7 @@ if ( CLIENT ) then
 	-- we're creating a bunch of local functions here using the cvars above so that we don't have to
 	-- rely on the TOOL object (which can be problematic when trying to use it inside a hook).
 	-- these should be pretty much identical to the TOOL functions created near the top of this file
-	local function getStackSize()            return cvarCount:GetInt()       end
+	local function getStackSize()        return cvarCount:GetInt()       end
 	local function getMaxPerStack()      return cvarMaxPerStack:GetInt() end
 	local function getStackerMode()      return cvarMode:GetInt()        end
 	local function getDirection()        return cvarDirection:GetInt()   end

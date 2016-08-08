@@ -3,7 +3,6 @@
 local prefix = "#tool.stacker_improved."
 
 localify.Bind( "en", prefix.."language_en",    "English" )
-localify.Bind( "en", prefix.."language_ja",    "Japanese" )
 
 --[[--------------------------------------------------------------------------
 -- English Localization
