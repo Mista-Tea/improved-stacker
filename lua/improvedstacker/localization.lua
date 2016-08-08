@@ -9,7 +9,7 @@ localify.Bind( "en", prefix.."language_en",    "English" )
 --------------------------------------------------------------------------]]--
 
 -- Tool Settings
-localify.Bind( "en", prefix.."name",                     "Stacker - Improved" )
+localify.Bind( "en", prefix.."name",                     "Stacker - Improved (beta)" )
 localify.Bind( "en", prefix.."desc",                     "Easily stack duplicated props in any direction" )
 localify.Bind( "en", prefix.."left",                     "Create a stack" )
 localify.Bind( "en", prefix.."shift_left",               "Increase stack size" )
