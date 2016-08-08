@@ -680,7 +680,7 @@ function TOOL:LeftClick( trace )
 		entPos = entPos + (stackdir * height) + thisoffset
 		
 		entAng:RotateAroundAxis( entAng:Right(),   rotate.x )
-		entAng:RotateAroundAxis( entAng:Up(),      rotate.y )
+		entAng:RotateAroundAxis( entAng:Up(),     -rotate.y )
 		entAng:RotateAroundAxis( entAng:Forward(), rotate.z )
 		
 		-- check if the stacked props would be spawned outside of the world
