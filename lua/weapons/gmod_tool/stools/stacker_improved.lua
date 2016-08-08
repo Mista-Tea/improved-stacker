@@ -257,8 +257,8 @@ local oldWeld        = CreateConVar( "stacker_force_weld",        0, cvarFlagsNo
 local oldNoCollide   = CreateConVar( "stacker_force_nocollide",   0, cvarFlagsNotif ) -- determines whether props should be forced to spawn nocollided or not
 local oldStayInWorld = CreateConVar( "stacker_stayinworld",       1, cvarFlagsNotif ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
 
-local cvarMaxPlayer    = CreateConVar( mode.."_max_per_player",      oldMaxTotal:GetInt(),    cvarFlags ) -- defines the max amount of props that a player can have spawned from stacker
-local cvarMaxStack     = CreateConVar( mode.."_max_per_stack",       oldMaxCount:GetInt(),    cvarFlags ) -- defines the max amount of props that can be stacked at a time
+local cvarMaxPerPlayer = CreateConVar( mode.."_max_per_player",      oldMaxTotal:GetInt(),    cvarFlags ) -- defines the max amount of props that a player can have spawned from stacker
+local cvarMaxPerStack  = CreateConVar( mode.."_max_per_stack",       oldMaxCount:GetInt(),    cvarFlags ) -- defines the max amount of props that can be stacked at a time
 local cvarDelay        = CreateConVar( mode.."_delay",               oldDelay:GetFloat(),     cvarFlags ) -- determines the amount of time that must pass before a player can use stacker again
 local cvarMaxOffX      = CreateConVar( mode.."_max_offsetx",         oldMaxOffX:GetFloat(),   cvarFlags ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
 local cvarMaxOffY      = CreateConVar( mode.."_max_offsety",         oldMaxOffY:GetFloat(),   cvarFlags ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
@@ -410,8 +410,7 @@ end
 --------------------------------------------------------------------------]]--
 
 --[[--------------------------------------------------------------------------
--- 	TOOL:IsExceedingMax()
---	Returns true if the player has exceeded the allowed maximum stacker prop count.
+-- 	TOOL:GetMaxPerPlayer() and TOOL:GetNumberPlayerEnts()
 --
 --	The total number of props a player has spawned from the Stacker tool is recorded
 --	on them via ply.TotalStackerEnts. When a player removes a prop that has been spawned
@@ -429,19 +428,20 @@ end
 --	given time they can only have 30 props created by Stacker. Trying to stack any more props
 --	would give the player an error message.
 --]]--
-function TOOL:IsExceedingMax() return cvarMaxPlayer:GetInt() >= 0 and improvedstacker.GetEntCount( self:GetOwner(), 0 ) >= cvarMaxPlayer:GetInt() end
+function TOOL:GetMaxPerPlayer()     return cvarMaxPerPlayer:GetInt() end
+function TOOL:GetNumberPlayerEnts() return improvedstacker.GetEntCount( self:GetOwner(), 0 ) end
 
 --[[--------------------------------------------------------------------------
--- 	TOOL:GetCount()
+-- 	TOOL:GetStackSize()
 --	Gets the amount of props that the client wants to stack at once.
 --]]--
-function TOOL:GetCount() return self:GetClientNumber( "count" ) end
+function TOOL:GetStackSize() return self:GetClientNumber( "count" ) end
 
 --[[--------------------------------------------------------------------------
--- 	TOOL:GetMaxCount()
+-- 	TOOL:GetMaxPerStack()
 --	Gets the maximum amount of props that can be stacked at a time.
 --]]--
-function TOOL:GetMaxCount()	return cvarMaxStack:GetInt() end
+function TOOL:GetMaxPerStack() return cvarMaxPerStack:GetInt() end
 
 --[[--------------------------------------------------------------------------
 -- 	TOOL:GetDirection()
@@ -577,7 +577,7 @@ function TOOL:LeftClick( tr, isRightClick )
 	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
 		if ( CLIENT ) then return false end
 		-- increase their stack count by 1 (until it hits the stack max)
-		local newCount = self:GetCount() >= cvarMaxStack:GetInt() and cvarMaxStack:GetInt() or self:GetCount() + 1
+		local newCount = self:GetStackSize() >= self:GetMaxPerStack() and self:GetMaxPerStack() or self:GetStackSize() + 1
 		ply:ConCommand( mode.."_count "..newCount )
 		return false
 	end
@@ -585,13 +585,10 @@ function TOOL:LeftClick( tr, isRightClick )
 	if ( not IsValid( tr.Entity ) or tr.Entity:GetClass() ~= "prop_physics" ) then return false end
 	if ( CLIENT ) then return true end
 	
-	
-	local ply = self:GetOwner()
-	
 	-- otherwise, stack 1 if right-clicking or get the client's stack size value
-	local count = (isRightClick and 1) or self:GetCount()
+	local count = (isRightClick and 1) or self:GetStackSize()
 	-- check if the server wants to control how many props the player can use in the stack
-	local maxCount = hook.Run( "StackerCount", ply, count, isRightClick ) or self:GetMaxCount()
+	local maxCount = hook.Run( "StackerMaxPerStack", ply, count, isRightClick ) or self:GetMaxPerStack()
 
 	-- check if the player's stack size is higher than the server's max allowed size (but only if the server didn't explictly override it)
 	if ( maxCount >= 0 ) then
@@ -648,11 +645,15 @@ function TOOL:LeftClick( tr, isRightClick )
 	-- setup a new undo block so the player can undo the whole stack at once
 	undo.Create( mode )
 	
+	-- check if the server wants to control how many stacker entities this player can create
+	local maxPerPlayer = hook.Run( "StackerMaxPerPlayer", ply, self:GetNumberPlayerEnts() ) or self:GetMaxPerPlayer()
+	
 	-- loop for every prop to create in the stack and allow external addons to dictate control over the new stacked entities
 	for i = 1, count do
 		
 		-- check if the player has too many active stacker props spawned out already
-		if ( self:IsExceedingMax() ) then self:SendError( ("%s (%s)"):format(L(prefix.."error_max_per_player", localify.GetLocale( self:GetOwner() )), cvarMaxPlayer:GetInt()) ) break end
+		local stackerEntsSpawned = self:GetNumberPlayerEnts()
+		if ( maxPerPlayer >= 0 and stackerEntsSpawned >= maxPerPlayer ) then self:SendError( ("%s (%s)"):format(L(prefix.."error_max_per_player", localify.GetLocale( self:GetOwner() )), maxPerPlayer) ) break end
 		-- check if the player has exceeded the sbox_maxprops cvar
 		if ( not self:GetSWEP():CheckLimit( "props" ) )            then break end
 		-- check if external admin mods are blocking this entity
@@ -752,7 +753,7 @@ function TOOL:RightClick( tr )
 	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
 		if ( CLIENT ) then return false end
 		-- decrease the player's stack count by 1 (until a minimum of 1)
-		local count = self:GetCount()
+		local count = self:GetStackSize()
 		local newCount = (count <= 1 and 1) or count - 1
 		ply:ConCommand( mode.."_count " .. newCount )
 		return false
@@ -951,16 +952,16 @@ if ( CLIENT ) then
 	-- we're creating a bunch of local functions here using the cvars above so that we don't have to
 	-- rely on the TOOL object (which can be problematic when trying to use it inside a hook).
 	-- these should be pretty much identical to the TOOL functions created near the top of this file
-	local function getCount()            return cvarCount:GetInt()      end
-	local function getMaxCount()         return cvarMaxStack:GetInt()   end
-	local function getStackerMode()      return cvarMode:GetInt()       end
-	local function getDirection()        return cvarDirection:GetInt()  end
-	local function getOpacity()          return cvarOpacity:GetInt()    end	
-	local function shouldGhostAll()      return cvarGhostAll:GetBool()  end
-	local function shouldStackRelative() return cvarRelative:GetBool()  end
-	local function shouldApplyMaterial() return cvarMaterial:GetBool()  end
-	local function shouldApplyColor()    return cvarColor:GetBool()     end
-	local function shouldAddHalos()      return cvarHalo:GetBool()      end
+	local function getStackSize()            return cvarCount:GetInt()       end
+	local function getMaxPerStack()      return cvarMaxPerStack:GetInt() end
+	local function getStackerMode()      return cvarMode:GetInt()        end
+	local function getDirection()        return cvarDirection:GetInt()   end
+	local function getOpacity()          return cvarOpacity:GetInt()     end	
+	local function shouldGhostAll()      return cvarGhostAll:GetBool()   end
+	local function shouldStackRelative() return cvarRelative:GetBool()   end
+	local function shouldApplyMaterial() return cvarMaterial:GetBool()   end
+	local function shouldApplyColor()    return cvarColor:GetBool()      end
+	local function shouldAddHalos()      return cvarHalo:GetBool()       end
 	
 	local function getOffsetVector()
 		return Vector( math.Clamp( cvarOffsetX:GetFloat(), -cvarMaxOffX:GetFloat(), cvarMaxOffX:GetFloat() ), 
@@ -1027,8 +1028,8 @@ if ( CLIENT ) then
 		if ( improvedstacker.GetGhosts() ) then improvedstacker.ReleaseGhosts() end
 
 		-- truncate the stack size to the maximum allowed by the server
-		local count    = getCount()
-		local maxCount = getMaxCount()
+		local count    = getStackSize()
+		local maxCount = getMaxPerStack()
 		if ( not shouldGhostAll() and count ~= 0 ) then count = 1 end
 		if ( maxCount >= 0 and count > maxCount )  then count = maxCount end
 
@@ -1081,8 +1082,8 @@ if ( CLIENT ) then
 		end
 		
 		-- clamp the client's ghost stack to the server's maximum allowed size
-		local count    = getCount()
-		local maxCount = getMaxCount()
+		local count    = getStackSize()
+		local maxCount = getMaxPerStack()
 		if ( maxCount >= 0 and count > maxCount ) then count = maxCount end
 		
 		-- check if the number of ghosts in the stack matches the client's setting
@@ -1421,7 +1422,7 @@ if ( CLIENT ) then
 		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_nocollide"), Command = mode.."_nocollide" } )	
 		cpanel:AddControl( "ComboBox", relative )	
 		cpanel:AddControl( "ComboBox", directions )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_count"), Min = 1, Max = cvarMaxStack:GetInt(), Command = mode.."_count", Description = "How many props to create in each stack" } )
+		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_count"), Min = 1, Max = cvarMaxPerStack:GetInt(), Command = mode.."_count", Description = "How many props to create in each stack" } )
 		cpanel:AddControl( "Button",   { Label = L(prefix.."label_reset_offsets"), Command = mode.."_reset_offsets" } )
 		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_x"),     Type = "Float", Min = - cvarMaxOffX:GetInt(), Max = cvarMaxOffX:GetInt(), Value = 0, Command = mode.."_offsetx" } )
 		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_y"),     Type = "Float", Min = - cvarMaxOffY:GetInt(), Max = cvarMaxOffY:GetInt(), Value = 0, Command = mode.."_offsety" } )
