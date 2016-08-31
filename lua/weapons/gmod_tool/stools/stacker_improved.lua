@@ -246,28 +246,28 @@ elseif ( CLIENT ) then
 	cvarFlagsNotif = bit.bor( cvarFlags, FCVAR_NOTIFY )
 end
 
-local oldMaxTotal    = CreateConVar( "stacker_max_total",        -1, cvarFlagsNotif ) -- defines the max amount of props that a player can have spawned from stacker
-local oldMaxCount    = CreateConVar( "stacker_max_count",        15, cvarFlagsNotif ) -- defines the max amount of props that can be stacked at a time
-local oldDelay       = CreateConVar( "stacker_delay",           0.5, cvarFlagsNotif ) -- determines the amount of time that must pass before a player can use stacker again
-local oldMaxOffX     = CreateConVar( "stacker_max_offsetx",     200, cvarFlagsNotif ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-local oldMaxOffY     = CreateConVar( "stacker_max_offsety",     200, cvarFlagsNotif ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-local oldMaxOffZ     = CreateConVar( "stacker_max_offsetz",     200, cvarFlagsNotif ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
-local oldFreeze      = CreateConVar( "stacker_force_freeze",      0, cvarFlagsNotif ) -- determines whether props should be forced to spawn frozen or not
-local oldWeld        = CreateConVar( "stacker_force_weld",        0, cvarFlagsNotif ) -- determines whether props should be forced to spawn welded or not
-local oldNoCollide   = CreateConVar( "stacker_force_nocollide",   0, cvarFlagsNotif ) -- determines whether props should be forced to spawn nocollided or not
-local oldStayInWorld = CreateConVar( "stacker_stayinworld",       1, cvarFlagsNotif ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+local oldMaxTotal    = CreateConVar( "stacker_max_total",        -1, cvarFlagsNotif, "Defines the max amount of props that a player can have spawned from stacker" )
+local oldMaxCount    = CreateConVar( "stacker_max_count",        15, cvarFlagsNotif, "Defines the max amount of props that can be stacked at a time" )
+local oldDelay       = CreateConVar( "stacker_delay",           0.5, cvarFlagsNotif, "Determines the amount of time that must pass before a player can use stacker again" )
+local oldMaxOffX     = CreateConVar( "stacker_max_offsetx",     200, cvarFlagsNotif, "Defines the max distance on the x plane that stacked props can be offset (for individual control)" )
+local oldMaxOffY     = CreateConVar( "stacker_max_offsety",     200, cvarFlagsNotif, "Defines the max distance on the y plane that stacked props can be offset (for individual control)" )
+local oldMaxOffZ     = CreateConVar( "stacker_max_offsetz",     200, cvarFlagsNotif, "Defines the max distance on the z plane that stacked props can be offset (for individual control)" )
+local oldFreeze      = CreateConVar( "stacker_force_freeze",      0, cvarFlagsNotif, "Determines whether props should be forced to spawn frozen or not" )
+local oldWeld        = CreateConVar( "stacker_force_weld",        0, cvarFlagsNotif, "Determines whether props should be forced to spawn welded or not" )
+local oldNoCollide   = CreateConVar( "stacker_force_nocollide",   0, cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
+local oldStayInWorld = CreateConVar( "stacker_stayinworld",       1, cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
 
-local cvarMaxPerPlayer = CreateConVar( mode.."_max_per_player",      oldMaxTotal:GetInt(),    cvarFlags ) -- defines the max amount of props that a player can have spawned from stacker
-local cvarMaxPerStack  = CreateConVar( mode.."_max_per_stack",       oldMaxCount:GetInt(),    cvarFlags ) -- defines the max amount of props that can be stacked at a time
-local cvarDelay        = CreateConVar( mode.."_delay",               oldDelay:GetFloat(),     cvarFlags ) -- determines the amount of time that must pass before a player can use stacker again
-local cvarMaxOffX      = CreateConVar( mode.."_max_offsetx",         oldMaxOffX:GetFloat(),   cvarFlags ) -- defines the max distance on the x plane that stacked props can be offset (for individual control)
-local cvarMaxOffY      = CreateConVar( mode.."_max_offsety",         oldMaxOffY:GetFloat(),   cvarFlags ) -- defines the max distance on the y plane that stacked props can be offset (for individual control)
-local cvarMaxOffZ      = CreateConVar( mode.."_max_offsetz",         oldMaxOffZ:GetFloat(),   cvarFlags ) -- defines the max distance on the z plane that stacked props can be offset (for individual control)
-local cvarFreeze       = CreateConVar( mode.."_force_freeze",        oldFreeze:GetInt(),      cvarFlagsNotif ) -- determines whether props should be forced to spawn frozen or not
-local cvarWeld         = CreateConVar( mode.."_force_weld",          oldWeld:GetInt(),        cvarFlagsNotif ) -- determines whether props should be forced to spawn welded or not
-local cvarNoCollide    = CreateConVar( mode.."_force_nocollide",     oldNoCollide:GetInt(),   cvarFlagsNotif ) -- determines whether props should be forced to spawn nocollided or not
-local cvarNoCollideAll = CreateConVar( mode.."_force_nocollide_all", 0,                       cvarFlags )
-local cvarStayInWorld  = CreateConVar( mode.."_force_stayinworld",   oldStayInWorld:GetInt(), cvarFlagsNotif ) -- determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)
+local cvarMaxPerPlayer = CreateConVar( mode.."_max_per_player",      oldMaxTotal:GetInt(),    cvarFlags,      "Defines the max amount of props that a player can have spawned from stacker" )
+local cvarMaxPerStack  = CreateConVar( mode.."_max_per_stack",       oldMaxCount:GetInt(),    cvarFlags,      "Defines the max amount of props that can be stacked at a time" )
+local cvarDelay        = CreateConVar( mode.."_delay",               oldDelay:GetFloat(),     cvarFlags,      "Determines the amount of time that must pass before a player can use stacker again" )
+local cvarMaxOffX      = CreateConVar( mode.."_max_offsetx",         oldMaxOffX:GetFloat(),   cvarFlags,      "Defines the max distance on the x plane that stacked props can be offset (for individual control)" )
+local cvarMaxOffY      = CreateConVar( mode.."_max_offsety",         oldMaxOffY:GetFloat(),   cvarFlags,      "Defines the max distance on the y plane that stacked props can be offset (for individual control)" )
+local cvarMaxOffZ      = CreateConVar( mode.."_max_offsetz",         oldMaxOffZ:GetFloat(),   cvarFlags,      "Defines the max distance on the z plane that stacked props can be offset (for individual control)" )
+local cvarFreeze       = CreateConVar( mode.."_force_freeze",        oldFreeze:GetInt(),      cvarFlagsNotif, "Determines whether props should be forced to spawn frozen or not" )
+local cvarWeld         = CreateConVar( mode.."_force_weld",          oldWeld:GetInt(),        cvarFlagsNotif, "Determines whether props should be forced to spawn welded or not" )
+local cvarNoCollide    = CreateConVar( mode.."_force_nocollide",     oldNoCollide:GetInt(),   cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
+local cvarNoCollideAll = CreateConVar( mode.."_force_nocollide_all", 0,                       cvarFlags,      "(EXPERIMENTAL, DISABLED) Determines whether props should be nocollide with everything except players, vehicles, and npcs" )
+local cvarStayInWorld  = CreateConVar( mode.."_force_stayinworld",   oldStayInWorld:GetInt(), cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
