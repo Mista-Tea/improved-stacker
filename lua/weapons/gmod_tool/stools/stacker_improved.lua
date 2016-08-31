@@ -669,7 +669,8 @@ function TOOL:LeftClick( tr, isRightClick )
 		-- calculate the next stacked entity's position
 		entPos = entPos + (direction * distance) + offset
 		-- rotate the next stacked entity's angle by the client's rotation values
-		improvedstacker.RotateAngle( entAng, stackRotation )
+		improvedstacker.RotateAngle( stackMode, stackDirection, entAng, stackRotation )
+		
 		
 		-- check if the stacked props would be spawned outside of the world
 		if ( stayInWorld and not util.IsInWorld( entPos ) ) then self:SendError( L(prefix.."error_not_in_world", localify.GetLocale( self:GetOwner() )) ) break end
@@ -1135,7 +1136,7 @@ if ( CLIENT ) then
 			-- calculate the next stacked entity's position
 			entPos = entPos + (direction * distance) + offset
 			-- rotate the next stacked entity's angle by the client's rotation values
-			improvedstacker.RotateAngle( entAng, stackRotation )
+			improvedstacker.RotateAngle( stackMode, stackDirection, entAng, stackRotation )
 			
 			local ghost = ghosts[ i ]
 			ghost:SetPos( entPos )

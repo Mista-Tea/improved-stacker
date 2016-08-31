@@ -411,6 +411,15 @@ OffsetFunctions = {
 	[DIRECTION_DOWN]  = function( angle, offset ) return (-angle:Up()      * offset.x) + ( angle:Forward() * offset.z) + ( angle:Right()   * offset.y) end,
 }
 
+RotationFunctions = {
+	[DIRECTION_FRONT] = function( angle ) return  angle:Right(),   angle:Up(),       angle:Forward() end,
+	[DIRECTION_BACK]  = function( angle ) return -angle:Right(),   angle:Up(),      -angle:Forward() end,
+	[DIRECTION_RIGHT] = function( angle ) return -angle:Forward(), angle:Up(),       angle:Right()   end,
+	[DIRECTION_LEFT]  = function( angle ) return  angle:Forward(), angle:Up(),      -angle:Right()   end,
+	[DIRECTION_UP]    = function( angle ) return -angle:Right(),   angle:Forward(),  angle:Up()      end,
+	[DIRECTION_DOWN]  = function( angle ) return  angle:Right(),   angle:Forward(), -angle:Up()      end,
+}
+
 --[[--------------------------------------------------------------------------
 -- 	GetDirection( number, number, angle )
 --
@@ -465,8 +474,10 @@ end
 --	two angles together. The first angle is modified directly by refence, so this does not
 --	return anything.
 --]]--
-function RotateAngle( angle, rotation )
-	angle:RotateAroundAxis( angle:Right(),   rotation.x )
-	angle:RotateAroundAxis( angle:Up(),     -rotation.y )
-	angle:RotateAroundAxis( angle:Forward(), rotation.z )
+function RotateAngle( stackMode, stackDir, angle, rotation )
+	local axisPitch, axisYaw, axisRoll = RotationFunctions[ stackDir ]( angle )
+
+	angle:RotateAroundAxis( axisPitch,  rotation.p )
+	angle:RotateAroundAxis( axisYaw,   -rotation.y )
+	angle:RotateAroundAxis( axisRoll,   rotation.r )
 end
