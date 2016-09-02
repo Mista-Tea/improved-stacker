@@ -3,6 +3,7 @@
 local prefix = "#tool.stacker_improved."
 
 localify.Bind( "en", prefix.."language_en",    "English" )
+localify.Bind( "en", prefix.."language_en",    "Български" )
 
 --[[--------------------------------------------------------------------------
 -- English Localization
@@ -104,6 +105,20 @@ localify.Bind( "en", prefix.."warning_freeze",           "For DarkRP." )
 localify.Bind( "en", prefix.."warning_weld",             "For DarkRP." )
 localify.Bind( "en", prefix.."warning_nocollide",        "For DarkRP." )
 localify.Bind( "en", prefix.."warning_nocollide_all",    "DO NOT CHANGE WHILE THE SERVER IS RUNNING. This uses the GM.ShouldCollide hook and is experimental. It works and is guaranteed to stop crashes from Stacker, but needs more testing." )
+
+--[[--------------------------------------------------------------------------
+-- Bulgarian Localization
+--------------------------------------------------------------------------]]--
+
+-- Tool Settings
+localify.Bind( "en", prefix.."name",                     "Натрупвач - Подобрен (beta)" )
+localify.Bind( "en", prefix.."desc",                     "Лесно натрупва еднакви предмети във всяка посока" )
+localify.Bind( "en", prefix.."left",                     "Създай натрупване" )
+localify.Bind( "en", prefix.."shift_left",               "Увеличи размера на натрупването" )
+localify.Bind( "en", prefix.."right",                    "Създай единичен обект" )
+localify.Bind( "en", prefix.."shift_right",              "Намали размера на натрупването" )
+localify.Bind( "en", prefix.."reload",                   "Смени направлението на натрупване" )
+localify.Bind( "en", "Undone_stacker_improved",          "Премахва натрупването на предмет(и)" )
 
 --[[--------------------------------------------------------------------------
 -- <Other> Localization
