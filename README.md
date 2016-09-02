@@ -25,6 +25,7 @@
 	- Oct 26th, 2015 :: Bug fixes
 	- Aug 3rd,  2016 :: Bug fixes
 	- Aug 31st, 2016 :: Bug fixes
+	- Sep 2nd,  2016 :: Added Bulgarian language support
 
 ###Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
