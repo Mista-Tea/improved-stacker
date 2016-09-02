@@ -3,7 +3,7 @@
 local prefix = "#tool.stacker_improved."
 
 localify.Bind( "en", prefix.."language_en",    "English" )
-localify.Bind( "en", prefix.."language_en",    "Български" )
+localify.Bind( "bg", prefix.."language_en",    "Български" )
 
 --[[--------------------------------------------------------------------------
 -- English Localization
@@ -111,14 +111,24 @@ localify.Bind( "en", prefix.."warning_nocollide_all",    "DO NOT CHANGE WHILE TH
 --------------------------------------------------------------------------]]--
 
 -- Tool Settings
-localify.Bind( "en", prefix.."name",                     "Натрупвач - Подобрен (beta)" )
-localify.Bind( "en", prefix.."desc",                     "Лесно натрупва еднакви предмети във всяка посока" )
-localify.Bind( "en", prefix.."left",                     "Създай натрупване" )
-localify.Bind( "en", prefix.."shift_left",               "Увеличи размера на натрупването" )
-localify.Bind( "en", prefix.."right",                    "Създай единичен обект" )
-localify.Bind( "en", prefix.."shift_right",              "Намали размера на натрупването" )
-localify.Bind( "en", prefix.."reload",                   "Смени направлението на натрупване" )
-localify.Bind( "en", "Undone_stacker_improved",          "Премахва натрупването на предмет(и)" )
+localify.Bind( "bg", prefix.."name",                     "Натрупвач - Подобрен (beta)" )
+localify.Bind( "bg", prefix.."desc",                     "Лесно натрупва еднакви предмети във всяка посока" )
+localify.Bind( "bg", prefix.."left",                     "Създай натрупване" )
+localify.Bind( "bg", prefix.."shift_left",               "Увеличи размера на натрупването" )
+localify.Bind( "bg", prefix.."right",                    "Създай единичен обект" )
+localify.Bind( "bg", prefix.."shift_right",              "Намали размера на натрупването" )
+localify.Bind( "bg", prefix.."reload",                   "Смени направлението на натрупване" )
+localify.Bind( "bg", "Undone_stacker_improved",          "Премахва натрупването на предмет(и)" )
+-- Errors
+localify.Bind( "bg", prefix.."error_blocked_by_server",  "Сървърът ви е блокирал да променяте тази конзолна променлива" )
+localify.Bind( "bg", prefix.."error_not_admin",          "Трябва да бъдете в групата 'admin' за да промените тази конзолна променлива" )
+localify.Bind( "bg", prefix.."error_invalid_argument",   "Трябва да въведете валидно число за тази стойност" )
+localify.Bind( "bg", prefix.."error_max_per_stack",      "Максималния брой предмети които могат да бъдат натрупани на един път е ограничен до " )
+localify.Bind( "bg", prefix.."error_too_quick",          "Използвате натрупвача твърде бързо" )
+localify.Bind( "bg", prefix.."error_max_per_player",     "Ограничението за натрупани предмети е достигнато" )
+localify.Bind( "bg", prefix.."error_not_in_world",       "Натрупваните предмети трябва да се създават вътре в света" )
+localify.Bind( "bg", prefix.."error_max_constraints",    "Не можа да се създаде връзка, най вероятно са свършили слотовете за обекти" )
+
 
 --[[--------------------------------------------------------------------------
 -- <Other> Localization
