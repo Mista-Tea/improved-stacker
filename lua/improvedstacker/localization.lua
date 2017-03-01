@@ -10,7 +10,7 @@ localify.Bind( "bg", prefix.."language_bg",    "Български" )
 --------------------------------------------------------------------------]]--
 
 -- Tool Settings
-localify.Bind( "en", prefix.."name",                     "Stacker - Improved (beta)" )
+localify.Bind( "en", prefix.."name",                     "Stacker - Improved" )
 localify.Bind( "en", prefix.."desc",                     "Easily stack duplicated props in any direction" )
 localify.Bind( "en", prefix.."left",                     "Create a stack" )
 localify.Bind( "en", prefix.."shift_left",               "Increase stack size" )
@@ -111,7 +111,7 @@ localify.Bind( "en", prefix.."warning_nocollide_all",    "DO NOT CHANGE WHILE TH
 --------------------------------------------------------------------------]]--
 
 -- Tool Settings
-localify.Bind( "bg", prefix.."name",                     "Натрупвач - Подобрен (beta)" )
+localify.Bind( "bg", prefix.."name",                     "Натрупвач - Подобрен" )
 localify.Bind( "bg", prefix.."desc",                     "Лесно натрупва еднакви предмети във всяка посока" )
 localify.Bind( "bg", prefix.."left",                     "Създай натрупване" )
 localify.Bind( "bg", prefix.."shift_left",               "Увеличи размера на натрупването" )
