@@ -1,6 +1,6 @@
-#Improved Stacker
+# Improved Stacker
 
-###Note:
+### Note:
 	Please DO NOT reupload this tool (verbatim or small tweaks) to the workshop or other public file-sharing websites.
 	I actively maintain this tool, so reuploading it may lead to people using outdated, buggy, or malicious copies.
 	If there is an issue with the tool, LET ME KNOW via one of the following pages:
@@ -9,12 +9,12 @@
 	- Workshop:  http://steamcommunity.com/sharedfiles/filedetails/?id=264467687
 	- Facepunch: https://facepunch.com/showthread.php?t=1399120
 
-###Author:
+### Author:
 	- Original            :: OverloadUT (STEAM_0:1:5250809)
 	- Updated for GMod 13 :: Marii      (STEAM_0:1:16015332)
 	- Rewritten           :: Mista Tea  (STEAM_0:0:27507323)
 	
-###Changelog:
+### Changelog:
 	- May 27th, 2014 :: Added to GitHub 
 	- May 28th, 2014 :: Added to Workshop 
 	- Jun 5th,  2014 :: Massive overhaul 
@@ -27,7 +27,7 @@
 	- Aug 31st, 2016 :: Bug fixes
 	- Sep 2nd,  2016 :: Added Bulgarian language support
 
-###Fixes:
+### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
 	- Prevented crash from players using very high P/Y/R rotate values.
 	- Prevented crash from very specific constraint settings.
@@ -36,7 +36,7 @@
 	- Fixed materials and color saving when duping stacked props.
 	- Fixed incorrect stack angles when trying to create a stack on an existing stack.
 	
-###Tweaks:
+### Tweaks:
 	- Added convenience functions to retrieve the client convars.
 	- Added option to enable/disable automatically applying materials to the stacked props.
 	- Added option to enable/disable automatically applying colors to the stacked props.
