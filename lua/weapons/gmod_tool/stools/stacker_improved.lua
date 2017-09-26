@@ -174,32 +174,33 @@ TOOL.Information = {
 
 if ( CLIENT ) then
 
-	TOOL.ClientConVar[ "mode" ]        = improvedstacker.MODE_PROP
-	TOOL.ClientConVar[ "direction" ]   = improvedstacker.DIRECTION_UP
-	TOOL.ClientConVar[ "count" ]       = "1"
-	TOOL.ClientConVar[ "freeze" ]      = "1"
-	TOOL.ClientConVar[ "weld" ]        = "1"
-	TOOL.ClientConVar[ "nocollide" ]   = "1"
-	TOOL.ClientConVar[ "ghostall" ]    = "1"
-	TOOL.ClientConVar[ "material" ]    = "1"
-	TOOL.ClientConVar[ "physprop" ]    = "1"
-	TOOL.ClientConVar[ "color" ]       = "1"
-	TOOL.ClientConVar[ "offsetx" ]     = "0"
-	TOOL.ClientConVar[ "offsety" ]     = "0"
-	TOOL.ClientConVar[ "offsetz" ]     = "0"
-	TOOL.ClientConVar[ "pitch" ]       = "0"
-	TOOL.ClientConVar[ "yaw" ]         = "0"
-	TOOL.ClientConVar[ "roll" ]        = "0"
-	TOOL.ClientConVar[ "relative" ]    = "1"
-	TOOL.ClientConVar[ "draw_halos" ]  = "0"
-	TOOL.ClientConVar[ "halo_r" ]      = "255"
-	TOOL.ClientConVar[ "halo_g" ]      = "0"
-	TOOL.ClientConVar[ "halo_b" ]      = "0"
-	TOOL.ClientConVar[ "halo_a" ]      = "255"
-	TOOL.ClientConVar[ "draw_axis" ]   = "1"
-	TOOL.ClientConVar[ "axis_labels" ] = "1"
-	TOOL.ClientConVar[ "axis_angles" ] = "0"
-	TOOL.ClientConVar[ "opacity" ]     = "100"
+	TOOL.ClientConVar[ "mode" ]          = improvedstacker.MODE_PROP
+	TOOL.ClientConVar[ "direction" ]     = improvedstacker.DIRECTION_UP
+	TOOL.ClientConVar[ "count" ]         = "1"
+	TOOL.ClientConVar[ "freeze" ]        = "1"
+	TOOL.ClientConVar[ "weld" ]          = "1"
+	TOOL.ClientConVar[ "nocollide" ]     = "1"
+	TOOL.ClientConVar[ "ghostall" ]      = "1"
+	TOOL.ClientConVar[ "material" ]      = "1"
+	TOOL.ClientConVar[ "physprop" ]      = "1"
+	TOOL.ClientConVar[ "color" ]         = "1"
+	TOOL.ClientConVar[ "offsetx" ]       = "0"
+	TOOL.ClientConVar[ "offsety" ]       = "0"
+	TOOL.ClientConVar[ "offsetz" ]       = "0"
+	TOOL.ClientConVar[ "pitch" ]         = "0"
+	TOOL.ClientConVar[ "yaw" ]           = "0"
+	TOOL.ClientConVar[ "roll" ]          = "0"
+	TOOL.ClientConVar[ "relative" ]      = "1"
+	TOOL.ClientConVar[ "draw_halos" ]    = "0"
+	TOOL.ClientConVar[ "halo_r" ]        = "255"
+	TOOL.ClientConVar[ "halo_g" ]        = "0"
+	TOOL.ClientConVar[ "halo_b" ]        = "0"
+	TOOL.ClientConVar[ "halo_a" ]        = "255"
+	TOOL.ClientConVar[ "draw_axis" ]     = "1"
+	TOOL.ClientConVar[ "axis_labels" ]   = "1"
+	TOOL.ClientConVar[ "axis_angles" ]   = "0"
+	TOOL.ClientConVar[ "opacity" ]       = "100"
+	TOOL.ClientConVar[ "use_shift_key" ] = "0"
 
 	--[[--------------------------------------------------------------------------
 	-- Language Settings
@@ -572,6 +573,13 @@ function TOOL:GetDelay() return cvarDelay:GetFloat() end
 function TOOL:GetOpacity() return self:GetClientNumber( "opacity" ) end
 
 --[[--------------------------------------------------------------------------
+-- 	TOOL:GetUseShiftKey()
+--	Returns true if the client has enabled the alternate use of SHIFT in combination
+--	with left and right clicking. If enable, holding SHIFT and pressing LMB/RMB will
+--	have the same effect as holding E and pressing LMB/RMB.
+--]]--
+function TOOL:GetUseShiftKey() return self:GetClientNumber( "use_shift_key" ) == 1 end
+--[[--------------------------------------------------------------------------
 -- Tool Functions
 --------------------------------------------------------------------------]]--
 
@@ -584,8 +592,8 @@ function TOOL:GetOpacity() return self:GetClientNumber( "opacity" ) end
 function TOOL:LeftClick( tr, isRightClick )
 	local ply = self:GetOwner()
 	
-	-- check if the player is holding E
-	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
+	-- check if the player is holding E or SHIFT (as long as they've enabled it)
+	if ( ply:KeyDown( IN_USE ) or (self:GetUseShiftKey() and ply:KeyDown( IN_SPEED )) ) then
 		if ( CLIENT ) then return false end
 		-- increase their stack count by 1 (until it hits the stack max)
 		local newCount = self:GetStackSize() >= self:GetMaxPerStack() and self:GetMaxPerStack() or self:GetStackSize() + 1
@@ -761,8 +769,8 @@ end
 function TOOL:RightClick( tr )
 	local ply = self:GetOwner()
 
-	-- check if the player is holding E
-	if ( ply:KeyDown( IN_USE ) or ply:KeyDown( IN_SPEED ) ) then
+	-- check if the player is holding E or SHIFT (as long as they've enabled it)
+	if ( ply:KeyDown( IN_USE ) or (self:GetUseShiftKey() and ply:KeyDown( IN_SPEED )) ) then
 		if ( CLIENT ) then return false end
 		-- decrease the player's stack count by 1 (until a minimum of 1)
 		local count = self:GetStackSize()
@@ -1447,15 +1455,16 @@ if ( CLIENT ) then
 		cpanel:AddControl( "Button",   { Label = L(prefix.."label_"..(showSettings and "hide" or "show").."_settings"),   Command = mode.."_show_settings" } )
 		
 		if ( showSettings ) then
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_relative"),    Command = mode.."_relative",   Description = "Stacks each prop relative to the prop right before it. This allows you to create curved stacks." } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_material"),    Command = mode.."_material",   Description = "Applies the material of the original prop to all stacked props" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_color"),       Command = mode.."_color",      Description = "Applies the color of the original prop to all stacked props" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_physprop"),    Command = mode.."_physprop",   Description = "Applies the physical properties of the original prop to all stacked props" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_ghost"),       Command = mode.."_ghostall",   Description = "Creates every ghost prop in the stack instead of just the first ghost prop" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis"),        Command = mode.."_draw_axis", } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis_labels"), Command = mode.."_axis_labels", } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis_angles"), Command = mode.."_axis_angles", } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_halo"),        Command = mode.."_draw_halos", Description = "Gives halos to all of the props in to ghosted stack" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_use_shift_key"), Command = mode.."_use_shift_key", Description = "Toggles the ability to hold SHIFT and click the left and right mouse buttons to change stack size" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_relative"),      Command = mode.."_relative",      Description = "Stacks each prop relative to the prop right before it. This allows you to create curved stacks" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_material"),      Command = mode.."_material",      Description = "Applies the material of the original prop to all stacked props" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_color"),         Command = mode.."_color",         Description = "Applies the color of the original prop to all stacked props" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_physprop"),      Command = mode.."_physprop",      Description = "Applies the physical properties of the original prop to all stacked props" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_ghost"),         Command = mode.."_ghostall",      Description = "Creates every ghost prop in the stack instead of just the first ghost prop" } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis"),          Command = mode.."_draw_axis", } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis_labels"),   Command = mode.."_axis_labels", } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis_angles"),   Command = mode.."_axis_angles", } )
+			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_halo"),          Command = mode.."_draw_halos", Description = "Gives halos to all of the props in to ghosted stack" } )
 			cpanel:AddControl( "Slider",   { Label = L(prefix.."label_opacity"), Type = "Integer", Min = 0, Max = 255, Command = mode.."_opacity" } )
 			cpanel:AddControl( "Color",    { Label = L(prefix.."checkbox_halo_color"), Red = mode.."_halo_r", Green = mode.."_halo_g", Blue = mode.."_halo_b", Alpha = mode.."_halo_a" } )
 		end
