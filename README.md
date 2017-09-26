@@ -26,6 +26,7 @@
 	- Aug 3rd,  2016 :: Bug fixes
 	- Aug 31st, 2016 :: Bug fixes
 	- Sep 2nd,  2016 :: Added Bulgarian language support
+	- Sep 26th, 2017 :: Added ability to toggle use of SHIFT key with LMB/RMB
 
 ### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
