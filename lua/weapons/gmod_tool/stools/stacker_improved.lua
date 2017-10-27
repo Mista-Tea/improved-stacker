@@ -1070,10 +1070,7 @@ if ( CLIENT ) then
 			ghost:SetSkin( entSkin )
 			ghost:Spawn()
 
-			ghost:SetSolid( SOLID_VPHYSICS )
-			ghost:SetMoveType( MOVETYPE_NONE )
 			ghost:SetRenderMode( RENDERMODE_TRANSALPHA )
-			ghost:SetNotSolid( true )
 			
 			table.insert( ghosts, ghost )
 		end
