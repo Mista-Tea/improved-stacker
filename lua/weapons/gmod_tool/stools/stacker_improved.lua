@@ -722,13 +722,18 @@ function TOOL:LeftClick( tr, isRightClick )
 			-- if the player is no longer connected, there is nothing to do
 			if ( not IsValid( ply ) ) then return end
 			improvedstacker.DecrementEntCount( ply )
-			
 		end, ply )
 		
 		self:ApplyMaterial( newEnt, entMat )
 		self:ApplyColor( newEnt, colorData )
 		self:ApplyFreeze( ply, newEnt )
-
+		
+		-- attempt to nocollide the new entity with the last, or break out of the loop if CBaseEntityList::AddNonNetworkableEntity fails
+		if ( not self:ApplyNoCollide( lastEnt, newEnt ) ) then
+			newEnt:Remove()
+			break
+		end
+		
 		-- attempt to weld the new entity with the last, or break out of the loop if CBaseEntityList::AddNonNetworkableEntity fails
 		if ( not self:ApplyWeld( lastEnt, newEnt ) ) then
 			newEnt:Remove()
@@ -743,10 +748,6 @@ function TOOL:LeftClick( tr, isRightClick )
 		undo.AddEntity( newEnt )
 		ply:AddCleanup( "props", newEnt )
 	end
-	
-	-- attempt to nocollide all of the entities with one another
-	-- this also checks if CBaseEntityList::AddNonNetworkableEntity fails to ensure the current 'undo' gets registered
-	self:ApplyNoCollide( newEnts )
 	
 	newEnts = nil
 	
@@ -866,8 +867,12 @@ end
 --]]--
 function TOOL:ApplyWeld( lastEnt, newEnt )
 	if ( not self:ShouldForceWeld() and not self:ShouldApplyWeld() ) then return true end
-
-	local ok, err = pcall( constraint.Weld, lastEnt, newEnt, 0, 0, 0 )
+	
+	local forceLimit    = 0
+	local isNocollided  = self:ShouldForceNoCollide() or self:ShouldApplyNoCollide()
+	local deleteOnBreak = false
+	
+	local ok, err = pcall( constraint.Weld, lastEnt, newEnt, 0, 0, forceLimit, isNocollided, deleteOnBreak )
 	
 	if ( not ok ) then
 		print( mode .. ": " .. L(prefix.."error_max_constraints") .." (error: " .. err .. ")" )
@@ -879,22 +884,17 @@ end
 
 --[[--------------------------------------------------------------------------
 --
--- 	TOOL:ApplyNoCollide( table )
+-- 	TOOL:ApplyNoCollide( entity, entity )
 --
---	Attempts to nocollide all stacker entities with one another.
---	This creates (1/2) * (N^2 - N) nocollide constraints, i.e. 1+2+3+...+N-1 (a geometric series that doesn't go to N).
+--	Attempts to nocollide the new entity to the last entity.
 --]]--
-function TOOL:ApplyNoCollide( stackerEnts )
+function TOOL:ApplyNoCollide( lastEnt, newEnt )
 	if ( not self:ShouldForceNoCollide() and not self:ShouldApplyNoCollide() ) then return true end
-	if ( #stackerEnts == 1 ) then return true end
+	-- we can skip this function if the client is trying to weld -and- nocollide, because
+	-- constraint.Weld already has a nocollide parameter
+	if ( self:ShouldForceWeld() or self:ShouldApplyWeld() ) then return true end
 	
-	local ok, err = pcall( function()
-		for i = 1, #stackerEnts - 1 do
-			for j = i + 1, #stackerEnts do
-				constraint.NoCollide( stackerEnts[i], stackerEnts[j], 0, 0 )
-			end
-		end
-	end )
+	local ok, err = pcall( constraint.NoCollide, lastEnt, newEnt, 0, 0 )
 	
 	if ( not ok ) then
 		print( mode .. ": " .. L(prefix.."error_max_constraints") .." (error: " .. err .. ")" )
