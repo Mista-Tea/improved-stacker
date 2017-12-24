@@ -639,11 +639,12 @@ function TOOL:LeftClick( tr, isRightClick )
 	local stayInWorld   = cvarStayInWorld:GetBool()
 
 	-- store the properties of the original prop so we can apply them to the stacked props
-	local ent = tr.Entity
+	local ent      = tr.Entity
 	local entPos   = ent:GetPos()
 	local entAng   = ent:GetAngles()
 	local entMod   = ent:GetModel()
 	local entSkin  = ent:GetSkin()
+	local entClass = ent:GetClass()
 	local entMat   = ent:GetMaterial()
 	local physMat  = ent:GetPhysicsObject():GetMaterial()
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
@@ -653,13 +654,11 @@ function TOOL:LeftClick( tr, isRightClick )
 		Color      = ent:GetColor(), 
 		RenderMode = ent:GetRenderMode(), 
 		RenderFX   = ent:GetRenderFX()
-	}	
-		
-	local newEnt
-	local newEnts = { ent }
-	local lastEnt = ent
+	}
 	
-	local direction, offset
+	-- Use mutiple assigment and store the trace entity
+	local newEnts, lastEnt, newEnt, direction, offset = { ent }, ent
+	
 	-- we only need to calculate the distance once based on the direction the user selected
 	local distance = improvedstacker.GetDistance( stackMode, stackDirection, ent )
 	
@@ -689,15 +688,15 @@ function TOOL:LeftClick( tr, isRightClick )
 
 		-- calculate the next stacked entity's position
 		entPos = entPos + (direction * distance) + offset
+		
 		-- rotate the next stacked entity's angle by the client's rotation values
 		improvedstacker.RotateAngle( stackMode, stackDirection, entAng, stackRotation )
-		
 		
 		-- check if the stacked props would be spawned outside of the world
 		if ( stayInWorld and not util.IsInWorld( entPos ) ) then self:SendError( L(prefix.."error_not_in_world", localify.GetLocale( self:GetOwner() )) ) break end
 		
 		-- create the new stacked entity
-		newEnt = ents.Create( "prop_physics" )
+		newEnt = ents.Create( entClass )
 		newEnt:SetModel( entMod )
 		newEnt:SetPos( entPos )
 		newEnt:SetAngles( entAng )
