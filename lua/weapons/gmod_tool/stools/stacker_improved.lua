@@ -29,6 +29,7 @@
 		- Sep 2nd,  2016 :: Added Bulgarian language support
 		- Sep 26th, 2017 :: Added ability to toggle use of SHIFT key with LMB/RMB
 		- Oct 27th, 2017 :: Small client optimization, reverted nocollide implementation back to original
+		- Apr 14th, 2018 :: Added French language support
 		
 		Fixes:
 			- Prevented crash from players using very high X/Y/Z offset values.
@@ -346,35 +347,35 @@ elseif ( SERVER ) then
 		RunConsoleCommand( mode.."_max_per_player", args[1] )
 	end )
 	--[[-------------------------------------------------------------]]--
-	concommand.Add( mode.."_set_max_per_stack", function( ply, cmd, args )		
-		if ( not validateCommand( ply, mode.."_set_max_per_stack", args[1] ) ) then return false end	
+	concommand.Add( mode.."_set_max_per_stack", function( ply, cmd, args )
+		if ( not validateCommand( ply, mode.."_set_max_per_stack", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_max_per_stack", args[1] )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_max_offset", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_max_offset", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_max_offset", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_max_offsetx", args[1] )
 		RunConsoleCommand( mode.."_max_offsety", args[1] )
 		RunConsoleCommand( mode.."_max_offsetz", args[1] )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_max_offsetx", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_max_offsetx", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_max_offsetx", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_max_offsetx", args[1] )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_max_offsety", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_max_offsety", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_max_offsety", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_max_offsety", args[1] )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_max_offsetz", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_max_offsetz", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_max_offsetz", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_max_offsetz", args[1] )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_force_stayinworld", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_force_stayinworld", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_force_stayinworld", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_force_stayinworld", tobool( args[1] ) and "1" or "0" )
 	end )
 	--[[-------------------------------------------------------------]]--
@@ -384,22 +385,22 @@ elseif ( SERVER ) then
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_force_weld", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_force_weld", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_force_weld", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_force_weld", tobool( args[1] ) and "1" or "0" )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_force_nocollide", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_force_nocollide", args[1] ) ) then return false end		
+		if ( not validateCommand( ply, mode.."_set_force_nocollide", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_force_nocollide", tobool( args[1] ) and "1" or "0" )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_force_nocollide_all", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_force_nocollide_all", args[1] ) ) then return false end		
+		if ( not validateCommand( ply, mode.."_set_force_nocollide_all", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_force_nocollide_all", tobool( args[1] ) and "1" or "0" )
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_delay", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_delay", args[1] ) ) then return false end		
+		if ( not validateCommand( ply, mode.."_set_delay", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_delay", args[1] )
 	end )
 

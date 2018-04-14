@@ -28,6 +28,7 @@
 	- Sep 2nd,  2016 :: Added Bulgarian language support
 	- Sep 26th, 2017 :: Added ability to toggle use of SHIFT key with LMB/RMB
 	- Oct 27th, 2017 :: Small client optimization, reverted nocollide implementation back to original
+	- Apr 14th, 2018 :: Added French language support
 
 ### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
