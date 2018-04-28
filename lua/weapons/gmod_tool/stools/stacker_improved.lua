@@ -677,7 +677,7 @@ function TOOL:LeftClick( tr, isRightClick )
 		local stackerEntsSpawned = self:GetNumberPlayerEnts()
 		if ( maxPerPlayer >= 0 and stackerEntsSpawned >= maxPerPlayer ) then self:SendError( ("%s (%s)"):format(L(prefix.."error_max_per_player", localify.GetLocale( self:GetOwner() )), maxPerPlayer) ) break end
 		-- check if the player has exceeded the sbox_maxprops cvar
-		if ( not self:GetSWEP():CheckLimit( "props" ) )            then break end
+		--if ( not self:GetSWEP():CheckLimit( "props" ) )            then break end
 		-- check if external admin mods are blocking this entity
 		if ( hook.Run( "PlayerSpawnProp", ply, entMod ) == false ) then break end
 		
