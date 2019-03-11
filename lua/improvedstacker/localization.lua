@@ -222,7 +222,7 @@ localify.Bind( "fr", prefix.."left",                     "Créer une pile" )
 localify.Bind( "fr", prefix.."shift_left",               "Augmenter la taille des piles" )
 localify.Bind( "fr", prefix.."right",                    "Créer un seul prop" )
 localify.Bind( "fr", prefix.."shift_right",              "Diminuer la taille de la pile" )
-localify.Bind( "en", prefix.."reload",                   "Changer la direction de la pile" )
+localify.Bind( "fr", prefix.."reload",                   "Changer la direction de la pile" )
 localify.Bind( "fr", "Undone_stacker_improved",          "Annuler le(s) prop(s) empilé(s)" )
 -- Erreurs
 localify.Bind( "fr", prefix.."error_blocked_by_server",  "Le serveur vous a empêché de modifier cette variable de console" )
