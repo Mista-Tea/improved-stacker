@@ -30,6 +30,7 @@
 	- Oct 27th, 2017 :: Small client optimization, reverted nocollide implementation back to original
 	- Apr 14th, 2018 :: Added French language support
 	- Oct 12th, 2018 :: Added Polish language support
+	- Mar 12th, 2019 :: Added convar to disable all admin settings
 
 ### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
@@ -61,6 +62,7 @@
 		> stacker_improved_force_nocollide           <0/1>
 		> stacker_improved_force_nocollide_all       <0/1>
 		> stacker_improved_delay                     <0/inf>
+		> stacker_improved_enable_admin_settings     <0/1>
 
 	- Added console commands for server admins to control the console variables that limit stacker.
 		> stacker_improved_set_max_per_player     <-inf/inf> (less than 0 == no limit)
