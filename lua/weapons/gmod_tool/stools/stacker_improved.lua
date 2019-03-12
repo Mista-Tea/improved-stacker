@@ -5,24 +5,24 @@
 		Please DO NOT reupload this tool (verbatim or small tweaks) to the workshop or other public file-sharing websites.
 		I actively maintain this tool, so reuploading it may lead to people using outdated, buggy, or malicious copies.
 		If there is an issue with the tool, LET ME KNOW via one of the following pages:
-		
+
 		- GitHub:    https://github.com/Mista-Tea/improved-stacker
 		- Workshop:  http://steamcommunity.com/sharedfiles/filedetails/?id=264467687
 		- Facepunch: https://facepunch.com/showthread.php?t=1399120
-	
+
 	Author:
 		- Original            :: OverloadUT (STEAM_0:1:5250809)
 		- Updated for GMod 13 :: Marii      (STEAM_0:1:16015332)
 		- Rewritten           :: Mista Tea  (STEAM_0:0:27507323)
-	
+
 	Changelog:
-		- May 27th, 2014 :: Added to GitHub 
-		- May 28th, 2014 :: Added to Workshop 
-		- Jun 5th,  2014 :: Massive overhaul 
-		- Jul 24th, 2014 :: Large update 
-		- Aug 12th, 2014 :: Optimizations 
-		- Jun 30th, 2015 :: Bug fixes/features 
-		- Jul 11th, 2015 :: Bug fixes 
+		- May 27th, 2014 :: Added to GitHub
+		- May 28th, 2014 :: Added to Workshop
+		- Jun 5th,  2014 :: Massive overhaul
+		- Jul 24th, 2014 :: Large update
+		- Aug 12th, 2014 :: Optimizations
+		- Jun 30th, 2015 :: Bug fixes/features
+		- Jul 11th, 2015 :: Bug fixes
 		- Oct 26th, 2015 :: Bug fixes
 		- Aug 3rd,  2016 :: Bug fixes
 		- Aug 31st, 2016 :: Bug fixes
@@ -30,7 +30,8 @@
 		- Sep 26th, 2017 :: Added ability to toggle use of SHIFT key with LMB/RMB
 		- Oct 27th, 2017 :: Small client optimization, reverted nocollide implementation back to original
 		- Apr 14th, 2018 :: Added French language support
-		
+		- Mar 12th, 2019 :: Added convar to disable all admin settings
+
 		Fixes:
 			- Prevented crash from players using very high X/Y/Z offset values.
 			- Prevented crash from players using very high P/Y/R rotate values.
@@ -39,7 +40,7 @@
 			- Fixed massive FPS drop from halos being rendered in a Think hook instead of a PreDrawHalos hook.
 			- Fixed materials and color saving when duping stacked props.
 			- Fixed incorrect stack angles when trying to create a stack on an existing stack.
-			
+
 		Tweaks:
 			- Added convenience functions to retrieve the client convars.
 			- Added option to enable/disable automatically applying materials to the stacked props.
@@ -48,7 +49,7 @@
 			- Added support for props with multiple skins.
 			- Added support for external prop protections/anti-spam addons with the StackerEntity hook.
 			- Modified NoCollide to actually no-collide each stacker prop with every other prop in the stack.
-			
+
 			- Added console variables for server operators to limit various parts of stacker.
 				> stacker_improved_max_per_player         <-inf/inf> (less than 0 == no limit)
 				> stacker_improved_max_per_stack          <-inf/inf> (less than 0 == no limit)
@@ -61,6 +62,7 @@
 				> stacker_improved_force_nocollide           <0/1>
 				> stacker_improved_force_nocollide_all       <0/1>
 				> stacker_improved_delay                     <0/inf>
+				> stacker_improved_enable_admin_settings     <0/1>
 
 			- Added console commands for server admins to control the console variables that limit stacker.
 				> stacker_improved_set_max_per_player     <-inf/inf> (less than 0 == no limit)
@@ -161,11 +163,11 @@ TOOL.Name     = "#tool."..mode..".name"
 TOOL.Information = {
 	"left",
 	"right",
-	{ 
+	{
 		name  = "shift_left",
 		icon2  = "gui/e.png",
 		icon = "gui/lmb.png",
-		
+
 	},
 	{
 		name  = "shift_right",
@@ -218,11 +220,11 @@ if ( CLIENT ) then
 	language.Add( "tool."..mode..".shift_right",  L(prefix.."shift_right") )
 	language.Add( "tool."..mode..".reload",       L(prefix.."reload") )
 	language.Add( "Undone_"..mode,                L("Undone_"..mode) )
-	
+
 	--[[--------------------------------------------------------------------------
 	-- Net Messages
 	--------------------------------------------------------------------------]]--
-	
+
 	--[[--------------------------------------------------------------------------
 	-- 	Net :: <toolmode>_error( string )
 	--]]--
@@ -230,7 +232,7 @@ if ( CLIENT ) then
 		surface.PlaySound( "buttons/button10.wav" )
 		notification.AddLegacy( net.ReadString(), net.ReadUInt(MIN_NOTIFY_BITS), NOTIFY_DURATION )
 	end )
-	
+
 end
 
 --[[--------------------------------------------------------------------------
@@ -261,55 +263,56 @@ elseif ( CLIENT ) then
 	cvarFlagsNotif = bit.bor( cvarFlags, FCVAR_NOTIFY )
 end
 
-local oldMaxTotal    = CreateConVar( "stacker_max_total",        -1, cvarFlagsNotif, "Defines the max amount of props that a player can have spawned from stacker" )
-local oldMaxCount    = CreateConVar( "stacker_max_count",        15, cvarFlagsNotif, "Defines the max amount of props that can be stacked at a time" )
-local oldDelay       = CreateConVar( "stacker_delay",           0.5, cvarFlagsNotif, "Determines the amount of time that must pass before a player can use stacker again" )
-local oldMaxOffX     = CreateConVar( "stacker_max_offsetx",     200, cvarFlagsNotif, "Defines the max distance on the x plane that stacked props can be offset (for individual control)" )
-local oldMaxOffY     = CreateConVar( "stacker_max_offsety",     200, cvarFlagsNotif, "Defines the max distance on the y plane that stacked props can be offset (for individual control)" )
-local oldMaxOffZ     = CreateConVar( "stacker_max_offsetz",     200, cvarFlagsNotif, "Defines the max distance on the z plane that stacked props can be offset (for individual control)" )
-local oldFreeze      = CreateConVar( "stacker_force_freeze",      0, cvarFlagsNotif, "Determines whether props should be forced to spawn frozen or not" )
-local oldWeld        = CreateConVar( "stacker_force_weld",        0, cvarFlagsNotif, "Determines whether props should be forced to spawn welded or not" )
-local oldNoCollide   = CreateConVar( "stacker_force_nocollide",   0, cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
-local oldStayInWorld = CreateConVar( "stacker_stayinworld",       1, cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
+local oldMaxTotal    = CreateConVar( "stacker_max_total",          -1, cvarFlagsNotif, "Defines the max amount of props that a player can have spawned from stacker" )
+local oldMaxCount    = CreateConVar( "stacker_max_count",          15, cvarFlagsNotif, "Defines the max amount of props that can be stacked at a time" )
+local oldDelay       = CreateConVar( "stacker_delay",             0.5, cvarFlagsNotif, "Determines the amount of time that must pass before a player can use stacker again" )
+local oldMaxOffX     = CreateConVar( "stacker_max_offsetx",       200, cvarFlagsNotif, "Defines the max distance on the x plane that stacked props can be offset (for individual control)" )
+local oldMaxOffY     = CreateConVar( "stacker_max_offsety",       200, cvarFlagsNotif, "Defines the max distance on the y plane that stacked props can be offset (for individual control)" )
+local oldMaxOffZ     = CreateConVar( "stacker_max_offsetz",       200, cvarFlagsNotif, "Defines the max distance on the z plane that stacked props can be offset (for individual control)" )
+local oldFreeze      = CreateConVar( "stacker_force_freeze",        0, cvarFlagsNotif, "Determines whether props should be forced to spawn frozen or not" )
+local oldWeld        = CreateConVar( "stacker_force_weld",          0, cvarFlagsNotif, "Determines whether props should be forced to spawn welded or not" )
+local oldNoCollide   = CreateConVar( "stacker_force_nocollide",     0, cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
+local oldStayInWorld = CreateConVar( "stacker_stayinworld",         1, cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
 
-local cvarMaxPerPlayer = CreateConVar( mode.."_max_per_player",      oldMaxTotal:GetInt(),    cvarFlags,      "Defines the max amount of props that a player can have spawned from stacker" )
-local cvarMaxPerStack  = CreateConVar( mode.."_max_per_stack",       oldMaxCount:GetInt(),    cvarFlags,      "Defines the max amount of props that can be stacked at a time" )
-local cvarDelay        = CreateConVar( mode.."_delay",               oldDelay:GetFloat(),     cvarFlags,      "Determines the amount of time that must pass before a player can use stacker again" )
-local cvarMaxOffX      = CreateConVar( mode.."_max_offsetx",         oldMaxOffX:GetFloat(),   cvarFlags,      "Defines the max distance on the x plane that stacked props can be offset (for individual control)" )
-local cvarMaxOffY      = CreateConVar( mode.."_max_offsety",         oldMaxOffY:GetFloat(),   cvarFlags,      "Defines the max distance on the y plane that stacked props can be offset (for individual control)" )
-local cvarMaxOffZ      = CreateConVar( mode.."_max_offsetz",         oldMaxOffZ:GetFloat(),   cvarFlags,      "Defines the max distance on the z plane that stacked props can be offset (for individual control)" )
-local cvarFreeze       = CreateConVar( mode.."_force_freeze",        oldFreeze:GetInt(),      cvarFlagsNotif, "Determines whether props should be forced to spawn frozen or not" )
-local cvarWeld         = CreateConVar( mode.."_force_weld",          oldWeld:GetInt(),        cvarFlagsNotif, "Determines whether props should be forced to spawn welded or not" )
-local cvarNoCollide    = CreateConVar( mode.."_force_nocollide",     oldNoCollide:GetInt(),   cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
-local cvarNoCollideAll = CreateConVar( mode.."_force_nocollide_all", 0,                       cvarFlags,      "(EXPERIMENTAL, DISABLED) Determines whether props should be nocollide with everything except players, vehicles, and npcs" )
-local cvarStayInWorld  = CreateConVar( mode.."_force_stayinworld",   oldStayInWorld:GetInt(), cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
+local cvarMaxPerPlayer = CreateConVar( mode.."_max_per_player",        oldMaxTotal:GetInt(),    cvarFlags,      "Defines the max amount of props that a player can have spawned from stacker" )
+local cvarMaxPerStack  = CreateConVar( mode.."_max_per_stack",         oldMaxCount:GetInt(),    cvarFlags,      "Defines the max amount of props that can be stacked at a time" )
+local cvarDelay        = CreateConVar( mode.."_delay",                 oldDelay:GetFloat(),     cvarFlags,      "Determines the amount of time that must pass before a player can use stacker again" )
+local cvarMaxOffX      = CreateConVar( mode.."_max_offsetx",           oldMaxOffX:GetFloat(),   cvarFlags,      "Defines the max distance on the x plane that stacked props can be offset (for individual control)" )
+local cvarMaxOffY      = CreateConVar( mode.."_max_offsety",           oldMaxOffY:GetFloat(),   cvarFlags,      "Defines the max distance on the y plane that stacked props can be offset (for individual control)" )
+local cvarMaxOffZ      = CreateConVar( mode.."_max_offsetz",           oldMaxOffZ:GetFloat(),   cvarFlags,      "Defines the max distance on the z plane that stacked props can be offset (for individual control)" )
+local cvarFreeze       = CreateConVar( mode.."_force_freeze",          oldFreeze:GetInt(),      cvarFlagsNotif, "Determines whether props should be forced to spawn frozen or not" )
+local cvarWeld         = CreateConVar( mode.."_force_weld",            oldWeld:GetInt(),        cvarFlagsNotif, "Determines whether props should be forced to spawn welded or not" )
+local cvarNoCollide    = CreateConVar( mode.."_force_nocollide",       oldNoCollide:GetInt(),   cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
+local cvarNoCollideAll = CreateConVar( mode.."_force_nocollide_all",   0,                       cvarFlags,      "(EXPERIMENTAL, DISABLED) Determines whether props should be nocollide with everything except players, vehicles, and npcs" )
+local cvarStayInWorld  = CreateConVar( mode.."_force_stayinworld",     oldStayInWorld:GetInt(), cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
+local cvarEnableAdmin  = CreateConVar( mode.."_enable_admin_settings", 1,                       cvarFlags,      "Determines whether server admins can change stacker settings or not (overrides StackerConVar hook)" )
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
 --------------------------------------------------------------------------]]--
 
 if ( CLIENT ) then
-	
+
 	concommand.Add( mode.."_reset_offsets", function( ply, cmd, args )
 		-- reset all of the offset values to 0
 		RunConsoleCommand( mode.."_offsetx", "0.00" )
 		RunConsoleCommand( mode.."_offsety", "0.00" )
 		RunConsoleCommand( mode.."_offsetz", "0.00" )
 	end	)
-	
+
 	concommand.Add( mode.."_reset_angles", function( ply, cmd, args )
 		-- reset all of the angle values to 0
 		RunConsoleCommand( mode.."_pitch",   "0.00" )
 		RunConsoleCommand( mode.."_yaw",     "0.00" )
 		RunConsoleCommand( mode.."_roll",    "0.00" )
 	end )
-	
+
 	concommand.Add( mode.."_reset_admin", function( ply, cmd, args )
 		for cmd, val in pairs( improvedstacker.SETTINGS_DEFAULT ) do
 			RunConsoleCommand( cmd, val )
 		end
 	end )
-	
+
 elseif ( SERVER ) then
 
 	local function validateCommand( ply, cmd, arg )
@@ -317,12 +320,20 @@ elseif ( SERVER ) then
 		-- true:          allow
 		-- false:         block
 		-- nil (default): fallback to a ply:IsAdmin() check
-		local result, reason = hook.Run( "StackerConVar", ply, cmd, arg )
+
+
+		local result, reason
+
+		if ( not cvarEnableAdmin:GetBool() ) then
+			result = false
+		else
+			result, reason = hook.Run( "StackerConVar", ply, cmd, arg )
+		end
 
 		-- if a player ran the command and the server didn't explicitly allow them to change the cvar
 		if ( IsValid( ply ) and result ~= true ) then
 			-- if the server blocked the change, send the player an error
-			if ( result == false )                     then
+			if ( result == false ) then
 				ply:PrintMessage( HUD_PRINTTALK, L(prefix.."error_blocked_by_server", localify.GetLocale( ply )) .. (isstring(reason) and ": " .. reason or "") )
 				return false
 			end
@@ -332,13 +343,13 @@ elseif ( SERVER ) then
 				return false
 			end
 		end
-		
+
 		-- lastly, ensure the argument is a valid number before returning true
 		if ( not tonumber( arg ) ) then
 			ply:PrintMessage( HUD_PRINTTALK, L(prefix.."error_invalid_argument", localify.GetLocale( ply )) )
 			return false
 		end
-		
+
 		return true
 	end
 	--[[-------------------------------------------------------------]]--
@@ -380,7 +391,7 @@ elseif ( SERVER ) then
 	end )
 	--[[-------------------------------------------------------------]]--
 	concommand.Add( mode.."_set_force_freeze", function( ply, cmd, args )
-		if ( not validateCommand( ply, mode.."_set_force_freeze", args[1] ) ) then return false end	
+		if ( not validateCommand( ply, mode.."_set_force_freeze", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_force_freeze", tobool( args[1] ) and "1" or "0" )
 	end )
 	--[[-------------------------------------------------------------]]--
@@ -404,14 +415,14 @@ elseif ( SERVER ) then
 		RunConsoleCommand( mode.."_delay", args[1] )
 	end )
 
-	
+
 	util.AddNetworkString( mode.."_error" )
 
 	--[[--------------------------------------------------------------------------
 	--	TOOL:SendError( str )
 	--	Convenience function for sending an error to the tool owner.
 	--]]--
-	function TOOL:SendError( str )		
+	function TOOL:SendError( str )
 		net.Start( mode.."_error" )
 			net.WriteString( str )
 			net.WriteUInt( notify or NOTIFY_ERROR, MIN_NOTIFY_BITS )
@@ -438,7 +449,7 @@ end
 --	with servers that don't want to limit the number of Stacker props a player can spawn directly.
 --	They may still hit cvars like sbox_maxprops before ever hitting stacker_max_per_player.
 --
---	As an example case, if players are crashing your servers by spawning 50 welded chairs 
+--	As an example case, if players are crashing your servers by spawning 50 welded chairs
 --	and unfreezing them all at once, you can set stacker_max_per_player to 30 so that at any
 --	given time they can only have 30 props created by Stacker. Trying to stack any more props
 --	would give the player an error message.
@@ -524,7 +535,7 @@ function TOOL:ShouldForceNoCollide() return cvarNoCollide:GetBool() end
 function TOOL:ShouldStackRelative() return self:GetClientNumber( "relative" ) == 1 end
 --[[--------------------------------------------------------------------------
 -- 	TOOL:ShouldGhostAll()
---	Returns true if the stacked props should all be ghosted or if only the 
+--	Returns true if the stacked props should all be ghosted or if only the
 --	first stacked prop should be ghosted.
 --]]--
 function TOOL:ShouldGhostAll() return self:GetClientNumber( "ghostall" ) == 1 end
@@ -594,7 +605,7 @@ function TOOL:GetUseShiftKey() return self:GetClientNumber( "use_shift_key" ) ==
 --]]--
 function TOOL:LeftClick( tr, isRightClick )
 	local ply = self:GetOwner()
-	
+
 	-- check if the player is holding E or SHIFT (as long as they've enabled it)
 	if ( ply:KeyDown( IN_USE ) or (self:GetUseShiftKey() and ply:KeyDown( IN_SPEED )) ) then
 		if ( CLIENT ) then return false end
@@ -606,7 +617,7 @@ function TOOL:LeftClick( tr, isRightClick )
 
 	if ( not IsValid( tr.Entity ) or tr.Entity:GetClass() ~= "prop_physics" ) then return false end
 	if ( CLIENT ) then return true end
-	
+
 	-- otherwise, stack 1 if right-clicking or get the client's stack size value
 	local count = (isRightClick and 1) or self:GetStackSize()
 	-- check if the server wants to control how many props the player can use in the stack
@@ -617,25 +628,25 @@ function TOOL:LeftClick( tr, isRightClick )
 		if ( count > maxCount ) then self:SendError( L(prefix.."error_max_per_stack", localify.GetLocale( self:GetOwner() )) .. maxCount ) end
 		count = math.Clamp( count, 0, maxCount )
 	end
-	
+
 	-- get the player's last stacker usage time, defaulting to 0 if it hasn't been set
 	local lastStackTime = improvedstacker.GetLastStackTime( ply, 0 )
-	
+
 	-- retrieve the time delay between stacker usage
 	-- we call StackerDelay to let external mods to set their own delays (less than or equal to 0 means no delay)
 	-- delay time is in seconds (e.g. 0.1 is a tenth of a second)
 	local delay = hook.Run( "StackerDelay", ply, lastStackTime ) or self:GetDelay()
-	
+
 	-- check if the player is trying to use stacker too quickly
 	if ( lastStackTime + delay > CurTime() ) then self:SendError( L(prefix.."error_too_quick", localify.GetLocale( self:GetOwner() )) ) return false end
 	improvedstacker.SetLastStackTime( ply, CurTime() )
-	
+
 	local stackDirection = self:GetDirection()
 	local stackMode      = self:GetStackerMode()
 	local stackOffset    = self:GetOffsetVector()
 	local stackRotation  = self:GetRotationAngle()
 	local stackRelative  = self:ShouldStackRelative()
-	
+
 	-- determines whether the stacked props are allowed to be positioned outside of the world or not
 	local stayInWorld   = cvarStayInWorld:GetBool()
 
@@ -648,31 +659,31 @@ function TOOL:LeftClick( tr, isRightClick )
 	local entMat   = ent:GetMaterial()
 	local physMat  = ent:GetPhysicsObject():GetMaterial()
 	local physGrav = ent:GetPhysicsObject():IsGravityEnabled()
-	
+
 	-- setup a table to hold the original prop's color data so that we can apply it to the stacked props
 	local colorData = {
-		Color      = ent:GetColor(), 
-		RenderMode = ent:GetRenderMode(), 
+		Color      = ent:GetColor(),
+		RenderMode = ent:GetRenderMode(),
 		RenderFX   = ent:GetRenderFX()
-	}	
-		
+	}
+
 	local newEnt
 	local newEnts = { ent }
 	local lastEnt = ent
-	
+
 	local direction, offset
 	-- we only need to calculate the distance once based on the direction the user selected
 	local distance = improvedstacker.GetDistance( stackMode, stackDirection, ent )
-	
+
 	-- setup a new undo block so the player can undo the whole stack at once
 	undo.Create( mode )
-	
+
 	-- check if the server wants to control how many stacker entities this player can create
 	local maxPerPlayer = hook.Run( "StackerMaxPerPlayer", ply, self:GetNumberPlayerEnts() ) or self:GetMaxPerPlayer()
-	
+
 	-- loop for every prop to create in the stack and allow external addons to dictate control over the new stacked entities
 	for i = 1, count do
-		
+
 		-- check if the player has too many active stacker props spawned out already
 		local stackerEntsSpawned = self:GetNumberPlayerEnts()
 		if ( maxPerPlayer >= 0 and stackerEntsSpawned >= maxPerPlayer ) then self:SendError( ("%s (%s)"):format(L(prefix.."error_max_per_player", localify.GetLocale( self:GetOwner() )), maxPerPlayer) ) break end
@@ -680,7 +691,7 @@ function TOOL:LeftClick( tr, isRightClick )
 		if ( not self:GetSWEP():CheckLimit( "props" ) )            then break end
 		-- check if external admin mods are blocking this entity
 		if ( hook.Run( "PlayerSpawnProp", ply, entMod ) == false ) then break end
-		
+
 		-- if we're positioning the first entity in the stack (regardless of relative to PROP or WORLD), or
 		-- if we're stacking relative to PROP and on the previous rotation, update the new direction and offset
 		if ( i == 1 or ( stackMode == improvedstacker.MODE_PROP and stackRelative ) ) then
@@ -692,11 +703,11 @@ function TOOL:LeftClick( tr, isRightClick )
 		entPos = entPos + (direction * distance) + offset
 		-- rotate the next stacked entity's angle by the client's rotation values
 		improvedstacker.RotateAngle( stackMode, stackDirection, entAng, stackRotation )
-		
-		
+
+
 		-- check if the stacked props would be spawned outside of the world
 		if ( stayInWorld and not util.IsInWorld( entPos ) ) then self:SendError( L(prefix.."error_not_in_world", localify.GetLocale( self:GetOwner() )) ) break end
-		
+
 		-- create the new stacked entity
 		newEnt = ents.Create( "prop_physics" )
 		newEnt:SetModel( entMod )
@@ -714,10 +725,10 @@ function TOOL:LeftClick( tr, isRightClick )
 
 		-- disabling this for now due to problems with ShouldCollide
 		--improvedstacker.MarkEntity( self:GetOwner(), newEnt )
-		
+
 		-- increase the total number of active stacker props spawned by the player by 1
 		improvedstacker.IncrementEntCount( ply )
-		
+
 		-- decrement the total number of active stacker props spawned by the player by 1
 		-- when the prop gets removed in any way
 		newEnt:CallOnRemove( "UpdateStackerTotal", function( ent, ply )
@@ -725,40 +736,40 @@ function TOOL:LeftClick( tr, isRightClick )
 			if ( not IsValid( ply ) ) then return end
 			improvedstacker.DecrementEntCount( ply )
 		end, ply )
-		
+
 		self:ApplyMaterial( newEnt, entMat )
 		self:ApplyColor( newEnt, colorData )
 		self:ApplyFreeze( ply, newEnt )
-		
+
 		-- attempt to nocollide the new entity with the last, or break out of the loop if CBaseEntityList::AddNonNetworkableEntity fails
 		if ( not self:ApplyNoCollide( lastEnt, newEnt ) ) then
 			newEnt:Remove()
 			break
 		end
-		
+
 		-- attempt to weld the new entity with the last, or break out of the loop if CBaseEntityList::AddNonNetworkableEntity fails
 		if ( not self:ApplyWeld( lastEnt, newEnt ) ) then
 			newEnt:Remove()
 			break
 		end
-		
+
 		self:ApplyPhysicalProperties( ent, newEnt, tr.PhysicsBone, { GravityToggle = physGrav, Material = physMat } )
-		
+
 		lastEnt = newEnt
 		table.insert( newEnts, newEnt )
-		
+
 		undo.AddEntity( newEnt )
 		ply:AddCleanup( "props", newEnt )
 	end
-	
+
 	newEnts = nil
-	
+
 	undo.SetPlayer( ply )
 	undo.Finish()
 
 	-- disabling this for now due to problems with ShouldCollide
 	--improvedstacker.MarkEntity( self:GetOwner(), ent )
-	
+
 	return true
 end
 
@@ -785,7 +796,7 @@ function TOOL:RightClick( tr )
 		-- create a single entity in the stack
 		return self:LeftClick( tr, true )
 	end
-	
+
 end
 
 --[[--------------------------------------------------------------------------
@@ -799,7 +810,7 @@ function TOOL:Reload()
 
 	local ply = self:GetOwner()
 	local direction = self:GetDirection()
-	
+
 	-- if they were at the last numerical direction (6), wrap around to the first (1)
 	if ( direction == improvedstacker.DIRECTION_DOWN ) then
 		direction = improvedstacker.DIRECTION_FRONT
@@ -807,10 +818,10 @@ function TOOL:Reload()
 	else
 		direction = direction + 1
 	end
-	
+
 	-- make the player update their client direction setting
 	ply:ConCommand( mode.."_direction " .. direction )
-	
+
 	return false
 end
 
@@ -822,7 +833,7 @@ end
 --]]--
 function TOOL:ApplyMaterial( ent, material )
 	if ( not self:ShouldApplyMaterial() ) then ent:SetMaterial( "" ) return end
-	
+
 	-- From: gamemodes/sandbox/entities/weapons/gmod_tool/stools/material.lua
 	-- "Make sure this is in the 'allowed' list in multiplayer - to stop people using exploits"
 	if ( not game.SinglePlayer() and not list.Contains( "OverrideMaterials", material ) and material ~= "" ) then return end
@@ -843,7 +854,7 @@ function TOOL:ApplyColor( ent, data )
 	ent:SetColor( data.Color )
 	ent:SetRenderMode( data.RenderMode )
 	ent:SetRenderFX( data.RenderFX )
-	
+
 	duplicator.StoreEntityModifier( ent, "colour", table.Copy( data ) )
 end
 
@@ -869,18 +880,18 @@ end
 --]]--
 function TOOL:ApplyWeld( lastEnt, newEnt )
 	if ( not self:ShouldForceWeld() and not self:ShouldApplyWeld() ) then return true end
-	
+
 	local forceLimit    = 0
 	local isNocollided  = self:ShouldForceNoCollide() or self:ShouldApplyNoCollide()
 	local deleteOnBreak = false
-	
+
 	local ok, err = pcall( constraint.Weld, lastEnt, newEnt, 0, 0, forceLimit, isNocollided, deleteOnBreak )
-	
+
 	if ( not ok ) then
 		print( mode .. ": " .. L(prefix.."error_max_constraints") .." (error: " .. err .. ")" )
 		self:SendError( mode .. ": " .. L(prefix.."error_max_constraints", localify.GetLocale( self:GetOwner() )) )
 	end
-	
+
 	return ok
 end
 
@@ -895,14 +906,14 @@ function TOOL:ApplyNoCollide( lastEnt, newEnt )
 	-- we can skip this function if the client is trying to weld -and- nocollide, because
 	-- constraint.Weld already has a nocollide parameter
 	if ( self:ShouldForceWeld() or self:ShouldApplyWeld() ) then return true end
-	
+
 	local ok, err = pcall( constraint.NoCollide, lastEnt, newEnt, 0, 0 )
-	
+
 	if ( not ok ) then
 		print( mode .. ": " .. L(prefix.."error_max_constraints") .." (error: " .. err .. ")" )
 		self:SendError( mode .. ": " .. L(prefix.."error_max_constraints", localify.GetLocale( self:GetOwner() )) )
 	end
-	
+
 	return ok
 end
 
@@ -910,19 +921,19 @@ end
 --
 -- 	TOOL:ApplyPhysicalProperties( entity, entity, number, table )
 --
---	Attempts to apply the original entity's Gravity/Physics Material properties 
+--	Attempts to apply the original entity's Gravity/Physics Material properties
 --	and weight onto the stacked propa.
---	
+--
 --]]--
 function TOOL:ApplyPhysicalProperties( original, newEnt, boneID, properties )
 	if ( not self:ShouldApplyPhysicalProperties() ) then return end
-	
+
 	if ( boneID ) then construct.SetPhysProp( nil, newEnt, boneID, nil, properties ) end
 	newEnt:GetPhysicsObject():SetMass( original:GetPhysicsObject():GetMass() )
 end
 
 if ( CLIENT ) then
-	
+
 	-- get the cvars if they're valid (e.g., editing and auto-refreshing this file).
 	-- otherwise they won't be valid yet when first ran and we have to wait until
 	-- TOOL:Init() gets called (below) to set them up
@@ -945,33 +956,33 @@ if ( CLIENT ) then
 	local cvarHaloR      = GetConVar( mode.."_halo_r" )
 	local cvarHaloG      = GetConVar( mode.."_halo_g" )
 	local cvarHaloB      = GetConVar( mode.."_halo_b" )
-	local cvarHaloA      = GetConVar( mode.."_halo_a" )	
+	local cvarHaloA      = GetConVar( mode.."_halo_a" )
 	local cvarHalo       = GetConVar( mode.."_draw_halos" )
 	local cvarAxis       = GetConVar( mode.."_draw_axis" )
 	local cvarAxisLbl    = GetConVar( mode.."_axis_labels" )
 	local cvarAxisAng    = GetConVar( mode.."_axis_angles" )
-	
+
 	-- offsets for drawing the axis arrows
 	local o1 = Vector(     0, 0,  0.05 )
 	local o2 = Vector(     0, 0, -0.05 )
 	local o3 = Vector(  0.05, 0,     0 )
 	local o4 = Vector( -0.05, 0,     0 )
 	local ao = 2.5
-	
+
 	-- colors for the axis arrows
 	local RED   = Color( 255,  50,  50 )
 	local GREEN = Color(   0, 255,   0 )
 	local BLUE  = Color(  50, 150, 255 )
 	local BLACK = Color(   0,   0,   0 )
-	
+
 	surface.CreateFont( mode.."_direction", {
 		font = "Arial",
 		size = 24,
 		weight = 700,
 		antialias = true
 	})
-	
-	
+
+
 	-- we're creating a bunch of local functions here using the cvars above so that we don't have to
 	-- rely on the TOOL object (which can be problematic when trying to use it inside a hook).
 	-- these should be pretty much identical to the TOOL functions created near the top of this file
@@ -979,15 +990,15 @@ if ( CLIENT ) then
 	local function getMaxPerStack()      return cvarMaxPerStack:GetInt() end
 	local function getStackerMode()      return cvarMode:GetInt()        end
 	local function getDirection()        return cvarDirection:GetInt()   end
-	local function getOpacity()          return cvarOpacity:GetInt()     end	
+	local function getOpacity()          return cvarOpacity:GetInt()     end
 	local function shouldGhostAll()      return cvarGhostAll:GetBool()   end
 	local function shouldStackRelative() return cvarRelative:GetBool()   end
 	local function shouldApplyMaterial() return cvarMaterial:GetBool()   end
 	local function shouldApplyColor()    return cvarColor:GetBool()      end
 	local function shouldAddHalos()      return cvarHalo:GetBool()       end
-	
+
 	local function getOffsetVector()
-		return Vector( math.Clamp( cvarOffsetX:GetFloat(), -cvarMaxOffX:GetFloat(), cvarMaxOffX:GetFloat() ), 
+		return Vector( math.Clamp( cvarOffsetX:GetFloat(), -cvarMaxOffX:GetFloat(), cvarMaxOffX:GetFloat() ),
 	                   math.Clamp( cvarOffsetY:GetFloat(), -cvarMaxOffY:GetFloat(), cvarMaxOffY:GetFloat() ),
 	                   math.Clamp( cvarOffsetZ:GetFloat(), -cvarMaxOffZ:GetFloat(), cvarMaxOffZ:GetFloat() ) )
 	end
@@ -997,14 +1008,14 @@ if ( CLIENT ) then
                       math.Clamp( cvarYaw:GetFloat(),   -MAX_ANGLE, MAX_ANGLE ),
                       math.Clamp( cvarRoll:GetFloat(),  -MAX_ANGLE, MAX_ANGLE ) )
 	end
-	
+
 	local function getHaloColor()
 		return Color( cvarHaloR:GetInt(),
                       cvarHaloG:GetInt(),
                       cvarHaloB:GetInt(),
 	                  cvarHaloA:GetInt() )
 	end
-	
+
 	--[[--------------------------------------------------------------------------
 	--
 	-- 	TOOL:Init()
@@ -1037,7 +1048,7 @@ if ( CLIENT ) then
 		cvarAxisLbl    = GetConVar( mode.."_axis_labels" )
 		cvarAxisAng    = GetConVar( mode.."_axis_angles" )
 	end
-	
+
 	--[[--------------------------------------------------------------------------
 	--
 	-- 	createGhostStack( entity, vector, angle )
@@ -1058,14 +1069,14 @@ if ( CLIENT ) then
 
 		local entMod  = ent:GetModel()
 		local entSkin = ent:GetSkin()
-		
+
 		local ghosts = {}
 		local ghost
-		
+
 		-- loop for the total stack size and create a new ghost prop
 		for i = 1, count do
 			ghost = ents.CreateClientProp( entMod )
-			
+
 			if ( not IsValid( ghost ) ) then continue end
 
 			ghost:SetModel( entMod )
@@ -1073,13 +1084,13 @@ if ( CLIENT ) then
 			ghost:Spawn()
 
 			ghost:SetRenderMode( RENDERMODE_TRANSALPHA )
-			
+
 			table.insert( ghosts, ghost )
 		end
-		
+
 		-- store the ghost array for later use
 		improvedstacker.SetGhosts( ghosts )
-		
+
 		return true
 	end
 
@@ -1095,22 +1106,22 @@ if ( CLIENT ) then
 		-- check if the array of ghosts is valid
 		local ghosts = improvedstacker.GetGhosts()
 		if ( not ghosts ) then return false end
-		
+
 		-- check if all the ghost entities are valid
 		for i = 1, #ghosts do
 			if ( not IsValid( ghosts[ i ] ) ) then return false end
 		end
-		
+
 		-- clamp the client's ghost stack to the server's maximum allowed size
 		local count    = getStackSize()
 		local maxCount = getMaxPerStack()
 		if ( maxCount >= 0 and count > maxCount ) then count = maxCount end
-		
+
 		-- check if the number of ghosts in the stack matches the client's setting
 		if     ( #ghosts ~= count and     shouldGhostAll() ) then return false
 		-- number of ghosts matches client's setting, so check if we should only be ghosting one
 		elseif ( #ghosts ~= 1     and not shouldGhostAll() ) then return false end
-		
+
 		return true
 	end
 
@@ -1120,30 +1131,30 @@ if ( CLIENT ) then
 	--
 	--	Attempts to update the positions and angles of all ghosted props in the stack.
 	--]]--
-	local function updateGhostStack( ent )		
+	local function updateGhostStack( ent )
 		local stackMode      = getStackerMode()
 		local stackDirection = getDirection()
 		local stackOffset    = getOffsetVector()
 		local stackRotation  = getRotationAngle()
 		local stackRelative  = shouldStackRelative()
-		
+
 		local applyMat  = shouldApplyMaterial()
 		local applyCol  = shouldApplyColor()
-		
+
 		local lastEnt = ent
 		local entPos = ent:GetPos()
 		local entAng = ent:GetAngles()
 		local entMat = ent:GetMaterial()
 		local entCol = ent:GetColor()
 			  entCol.a = getOpacity()
-		
+
 		local direction, offset
 		-- we only need to calculate the distance once based on the direction the user selected
 		local distance = improvedstacker.GetDistance( stackMode, stackDirection, ent )
-		
+
 		local ghost
 		local ghosts = improvedstacker.GetGhosts()
-		
+
 		for i = 1, #ghosts do
 			-- if we're positioning the first entity in the stack (regardless of relative to PROP or WORLD), or
 			-- if we're stacking relative to PROP and on the previous rotation, update the new direction and offset
@@ -1156,32 +1167,32 @@ if ( CLIENT ) then
 			entPos = entPos + (direction * distance) + offset
 			-- rotate the next stacked entity's angle by the client's rotation values
 			improvedstacker.RotateAngle( stackMode, stackDirection, entAng, stackRotation )
-			
+
 			local ghost = ghosts[ i ]
 			ghost:SetPos( entPos )
 			ghost:SetAngles( entAng )
 			ghost:SetMaterial( ( applyMat and entMat ) or "" )
 			ghost:SetColor( ( applyCol and entCol ) or TRANSPARENT )
 			ghost:SetNoDraw( false )
-			
+
 			lastEnt = ghost
 		end
 	end
-	
-	
+
+
 	--[[--------------------------------------------------------------------------
 	--
 	-- 	Hook :: PreDrawHalos
 	--
-	--	Loads the hook that draws halos on the ghosted entities in the stack. 
+	--	Loads the hook that draws halos on the ghosted entities in the stack.
 	--
-	--	This is the appropriate hook to create halos, NOT TOOL:Think(). The latter 
+	--	This is the appropriate hook to create halos, NOT TOOL:Think(). The latter
 	--	will be called way more than it needs to be and causes horrible FPS drops in singleplayer.
 	--]]--
 	hook.Add( "PreDrawHalos", mode.."_predrawhalos", function()
 		local ply = LocalPlayer()
 		if ( not IsValid( ply ) ) then return end
-		
+
 		-- check if we're looking at a valid entity
 		local lookingAt = ply:GetEyeTrace().Entity
 		if ( not ( IsValid( lookingAt ) and lookingAt:GetClass() == "prop_physics" ) ) then
@@ -1189,7 +1200,7 @@ if ( CLIENT ) then
 			improvedstacker.SetLookedAt( nil )
 			return
 		end
-		
+
 		-- check if they have the toolgun out and have stacker selected
 		local wep = ply:GetActiveWeapon()
 		if ( not ( IsValid( wep ) and wep:GetClass() == "gmod_tool" and cvarTool and cvarTool:GetString() == mode ) ) then
@@ -1197,20 +1208,20 @@ if ( CLIENT ) then
 			improvedstacker.SetLookedAt( nil )
 			return
 		end
-		
+
 		-- check if the current toolobject is valid before trying to use it --
 		-- commenting this out for now since I refactored these TOOL functions
 		-- into just local functions to ditch the need for the tool object
-		--[[local tool = wep.GetToolObject and wep:GetToolObject() 
+		--[[local tool = wep.GetToolObject and wep:GetToolObject()
 		if ( not ( tool and tool.GetOwner and IsValid( tool:GetOwner() ) ) ) then
 			return
 		end]]
-		
+
 		-- specify the entity that the client is currently looking at for future reference
 		improvedstacker.SetLookingAt( lookingAt )
 		-- get the entity that the client was last (successfully) looking at
 		local lookedAt = improvedstacker.GetLookedAt()
-		
+
 		-- if we're still looking at the same entity from the previous frame
 		if ( lookingAt == lookedAt ) then
 			-- if the ghost stack is still valid (nothing got deleted, etc)
@@ -1231,93 +1242,93 @@ if ( CLIENT ) then
 				improvedstacker.SetLookedAt( lookingAt )
 			end
 		end
-		
+
 		-- check if we want to add halos to the ghost stack
 		if ( not shouldAddHalos() ) then return end
-		
+
 		-- check if there are any ghosts to add halos to at all
 		local ghosts = improvedstacker.GetGhosts()
 		if ( not ghosts or #ghosts <= 0 ) then return end
 
 		halo.Add( ghosts, getHaloColor() )
 	end )
-	
+
 	--[[--------------------------------------------------------------------------
 	--
 	-- 	Hook :: PostDrawTranslucentRenderables
 	--
 	--	Draws the 2D x/y/z axis when looking at entities with the stacker tool.
 	--]]--
-	
+
 	hook.Add( "PostDrawTranslucentRenderables", mode.."_directions", function( drawingDepth, drawingSky )
 		if ( drawingSky ) then return end
 		local ply = LocalPlayer()
 		if ( not IsValid( ply ) ) then return end
-		
+
 		-- check if we want to draw the axis at all
 		if ( not ( cvarAxis and cvarAxis:GetBool() ) ) then return end
-		
+
 		-- check if we're looking at a valid entity
 		local ent = ply:GetEyeTrace().Entity
 		if ( not IsValid( ent ) ) then
 			return
 		end
-		
+
 		-- check if they have the toolgun out and have stacker selected
 		local wep = ply:GetActiveWeapon()
 		if ( not ( IsValid( wep ) and wep:GetClass() == "gmod_tool" and cvarTool and cvarTool:GetString() == mode ) ) then
 			return
 		end
-		
+
 		local pos = ent:GetPos()
-		
+
 		local f = ent:GetForward()
 		local r = ent:GetRight()
 		local u = ent:GetUp()
-		
+
 		-- draw the front arrow (red)
 		render.DrawLine( pos,    pos + (f*50),      RED, false )
 		render.DrawLine( pos + (f*50) - f*ao + Vector(0,0,ao), pos + (f*50), RED, false )
 		render.DrawLine( pos + (f*50) - f*ao - Vector(0,0,ao), pos + (f*50), RED, false )
 		render.DrawLine( pos+o1, pos + (f*50) + o1, RED, false )
 		render.DrawLine( pos+o2, pos + (f*50) + o2, RED, false )
-		
+
 		-- draw the right arrow (green)
 		render.DrawLine( pos,    pos + (r*50),      GREEN, false )
 		render.DrawLine( pos + (r*50) - r*ao + f*ao, pos + (r*50), GREEN, false )
 		render.DrawLine( pos + (r*50) - r*ao - f*ao, pos + (r*50), GREEN, false )
 		render.DrawLine( pos+o1, pos + (r*50) + o1, GREEN, false )
 		render.DrawLine( pos+o2, pos + (r*50) + o2, GREEN, false )
-		
+
 		-- draw the upward arrow (blue)
 		render.DrawLine( pos,    pos + (u*50),      BLUE, false )
 		render.DrawLine( pos + (u*50) - u*ao + r*ao, pos + (u*50), BLUE, false )
 		render.DrawLine( pos + (u*50) - u*ao - r*ao, pos + (u*50), BLUE, false )
 		render.DrawLine( pos+o3, pos + (u*50) + o3, BLUE, false )
 		render.DrawLine( pos+o4, pos + (u*50) + o4, BLUE, false )
-		
+
 		-- check if we want to draw the axis labels
 		if ( not ( cvarAxisLbl           and cvarAxisAng ) )           then return end
 		if ( not ( cvarAxisLbl:GetBool() or  cvarAxisAng:GetBool() ) ) then return end
-		
+
 		local fs = (pos + f*50 - u*5):ToScreen()
 		local rs = (pos + r*50 - u*5):ToScreen()
 		local us = (pos + u*55):ToScreen()
-		
+
 		local ang = ent:GetAngles()
-		
+
 		local front = ("%s%s"):format( cvarAxisLbl:GetBool() and L(prefix.."hud_front").." " or "", cvarAxisAng:GetBool() and "("..ang.x..")" or "" )
 		local right = ("%s%s"):format( cvarAxisLbl:GetBool() and L(prefix.."hud_right").." " or "", cvarAxisAng:GetBool() and "("..ang.y..")" or "" )
 		local upwrd = ("%s%s"):format( cvarAxisLbl:GetBool() and L(prefix.."hud_up").." "    or "", cvarAxisAng:GetBool() and "("..ang.z..")" or "" )
-		
+
 		cam.Start2D()
 			draw.SimpleTextOutlined( front, mode.."_direction", fs.x, fs.y, RED,   0, 0, 1, BLACK )
 			draw.SimpleTextOutlined( right, mode.."_direction", rs.x, rs.y, GREEN, 0, 0, 1, BLACK )
 			draw.SimpleTextOutlined( upwrd, mode.."_direction", us.x, us.y, BLUE,  1, 0, 1, BLACK )
 		cam.End2D()
-		
+
 	end )
-	
+
 end
 
 if ( CLIENT ) then
@@ -1330,7 +1341,7 @@ if ( CLIENT ) then
 	--]]--
 	local function buildCPanel( cpanel )
 		-- quick presets for default settings
-		local presets = { 
+		local presets = {
 			Label      = "Presets",
 			MenuButton = 1,
 			Folder     = mode,
@@ -1363,7 +1374,7 @@ if ( CLIENT ) then
 					[mode.."_axis_angles"] = "0",
 				},
 			},
-			CVars = { 
+			CVars = {
 				mode.."_mode",
 				mode.."_direction",
 				mode.."_count",
@@ -1391,14 +1402,14 @@ if ( CLIENT ) then
 				mode.."_axis_angles",
 			}
 		}
-		
+
 		local relativeOptions = {
 			[L(prefix.."combobox_world")] = { [mode.."_mode"] = improvedstacker.MODE_WORLD },
 			[L(prefix.."combobox_prop")]  = { [mode.."_mode"] = improvedstacker.MODE_PROP  },
 		}
-		
+
 		local relative = { Label = L(prefix.."label_relative"), MenuButton = "0", Options = relativeOptions }
-		
+
 		local directionOptions = {
 			["1 - "..L(prefix.."combobox_direction_front")] = { [mode.."_direction"] = improvedstacker.DIRECTION_FRONT },
 			["2 - "..L(prefix.."combobox_direction_back")]  = { [mode.."_direction"] = improvedstacker.DIRECTION_BACK  },
@@ -1407,18 +1418,18 @@ if ( CLIENT ) then
 			["5 - "..L(prefix.."combobox_direction_up")]    = { [mode.."_direction"] = improvedstacker.DIRECTION_UP    },
 			["6 - "..L(prefix.."combobox_direction_down")]  = { [mode.."_direction"] = improvedstacker.DIRECTION_DOWN  },
 		}
-		
+
 		local directions = { Label = L(prefix.."label_direction"), MenuButton = "0", Options = directionOptions }
-		
+
 		-- populate the table of valid languages that clients can switch between
 		local languageOptions = {}
-		
+
 		for code, tbl in pairs( localify.GetLocalizations() ) do
 			if ( not L(prefix.."language_"..code, code) ) then continue end
-			
+
 			languageOptions[ L(prefix.."language_"..code, code) ] = { localify_language = code }
 		end
-		
+
 		local languages = {
 			Label      = L(prefix.."label_language"),
 			MenuButton = 0,
@@ -1432,15 +1443,15 @@ if ( CLIENT ) then
 			cpanel:ClearControls()
 			buildCPanel( cpanel )
 		end, "improvedstacker" )
-		
+
 		cpanel:AddControl( "ComboBox", languages )
 		cpanel:ControlHelp( "\n" .. L(prefix.."label_credits") )
 		cpanel:AddControl( "Label",    { Text = L(prefix.."label_presets") } )
 		cpanel:AddControl( "ComboBox", presets )
 		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_freeze"),    Command = mode.."_freeze" } )
 		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_weld"),      Command = mode.."_weld" } )
-		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_nocollide"), Command = mode.."_nocollide" } )	
-		cpanel:AddControl( "ComboBox", relative )	
+		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_nocollide"), Command = mode.."_nocollide" } )
+		cpanel:AddControl( "ComboBox", relative )
 		cpanel:AddControl( "ComboBox", directions )
 		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_count"), Min = 1, Max = cvarMaxPerStack:GetInt(), Command = mode.."_count", Description = "How many props to create in each stack" } )
 		cpanel:AddControl( "Button",   { Label = L(prefix.."label_reset_offsets"), Command = mode.."_reset_offsets" } )
@@ -1451,9 +1462,9 @@ if ( CLIENT ) then
 		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_pitch"), Type = "Float", Min = -MAX_ANGLE,  Max = MAX_ANGLE,  Value = 0, Command = mode.."_pitch" } )
 		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_yaw"),   Type = "Float", Min = -MAX_ANGLE,  Max = MAX_ANGLE,  Value = 0, Command = mode.."_yaw" } )
 		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_roll"),  Type = "Float", Min = -MAX_ANGLE,  Max = MAX_ANGLE,  Value = 0, Command = mode.."_roll" } )
-		
+
 		cpanel:AddControl( "Button",   { Label = L(prefix.."label_"..(showSettings and "hide" or "show").."_settings"),   Command = mode.."_show_settings" } )
-		
+
 		if ( showSettings ) then
 			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_use_shift_key"), Command = mode.."_use_shift_key", Description = "Toggles the ability to hold SHIFT and click the left and right mouse buttons to change stack size" } )
 			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_relative"),      Command = mode.."_relative",      Description = "Stacks each prop relative to the prop right before it. This allows you to create curved stacks" } )
@@ -1469,7 +1480,7 @@ if ( CLIENT ) then
 			cpanel:AddControl( "Color",    { Label = L(prefix.."checkbox_halo_color"), Red = mode.."_halo_r", Green = mode.."_halo_g", Blue = mode.."_halo_b", Alpha = mode.."_halo_a" } )
 		end
 	end
-	
+
 	concommand.Add( mode.."_show_settings", function( ply, cmd, args )
 		local cpanel = controlpanel.Get( mode )
 		if ( not IsValid( cpanel ) ) then return end
@@ -1488,8 +1499,10 @@ if ( CLIENT ) then
 	--	operators to quickly and easily save/change Stacker server settings.
 	--]]--
 	hook.Add( "PopulateToolMenu", mode.."AdminUtilities", function()
+		if (cvarEnableAdmin:GetBool() ~= true) then return end
+
 		spawnmenu.AddToolMenuOption( "Utilities", "Admin", mode.."_utils", L(prefix.."name"), "", "", function( cpanel )
-			
+
 			-- quick presets for default settings
 			local presets = {
 				label      = "Presets",
@@ -1514,7 +1527,7 @@ if ( CLIENT ) then
 					{ CVar = mode.."_force_stayinworld", CCmd = mode.."_set_force_stayinworld" },
 				},
 			}
-			
+
 			local ctrl = vgui.Create( "StackerControlPresets", cpanel )
 			ctrl:SetPreset( presets.folder )
 			for k, v in pairs( presets.options ) do
@@ -1522,14 +1535,14 @@ if ( CLIENT ) then
 			end
 			for k, v in pairs( presets.cvars ) do
 				ctrl:AddConVar( v )
-			end			
+			end
 			cpanel:AddItem( ctrl )
 			--cpanel:AddControl( "ComboBox", presets )
-			
-			
+
+
 			local bg = Color( 210, 210, 210 ) or Color( 179, 216, 255 )
 			local fg = Color( 240, 240, 240 ) or Color( 229, 242, 255 )
-			
+
 			local sliders = {
 				{ String = "max_per_player", Min = -1, Max = 2048,  Decimals = 0 },
 				{ String = "max_per_stack",  Min =  1, Max = 100,   Decimals = 0 },
@@ -1538,7 +1551,7 @@ if ( CLIENT ) then
 				{ String = "max_offsety",    Min =  0, Max = 10000,              },
 				{ String = "max_offsetz",    Min =  0, Max = 10000,              },
 			}
-			
+
 			local sliderlist = vgui.Create( "DListLayout", cpanel )
 			sliderlist:DockPadding( 3, 1, 3, 3 )
 			sliderlist:SetPaintBackground( true )
@@ -1546,7 +1559,7 @@ if ( CLIENT ) then
 				draw.RoundedBox( 0, 0, 0, w, h, bg )
 			end
 			cpanel:AddItem( sliderlist )
-			
+
 			for k, data in pairs( sliders ) do
 				local list = vgui.Create( "DListLayout", sliderlist )
 				list:DockPadding( 5, 0, 5, 5 )
@@ -1555,9 +1568,9 @@ if ( CLIENT ) then
 				function list:Paint( w, h )
 					draw.RoundedBox( 0, 0, 0, w, h, fg )
 				end
-			
+
 				local decimals = data.Decimals or 2
-			
+
 				local slider = vgui.Create( "StackerDNumSlider", list )
 				slider:SetText( L(prefix.."label_"..data.String) )
 				slider.Label:SetFont( "DermaDefaultBold" )
@@ -1566,14 +1579,14 @@ if ( CLIENT ) then
 				slider:SizeToContents()
 				slider:SetDecimals( decimals )
 				slider:SetValue( decimals == 0 and GetConVar( mode.."_"..data.String ):GetInt() or GetConVar( mode.."_"..data.String ):GetFloat(), true )
-				
+
 				local cmd = mode.."_set_"..data.String
-				
+
 				function slider:OnValueChanged( value )
 					value = math.Round( value, decimals )
 					RunConsoleCommand( cmd, value )
 				end
-				
+
 				if ( L(prefix.."help_"..data.String) ) then
 					local help = vgui.Create( "DLabel", list )
 					help:SetText( L(prefix.."help_"..data.String) )
@@ -1583,7 +1596,7 @@ if ( CLIENT ) then
 					help:SetAutoStretchVertical( true )
 					help:SetFont( "DermaDefault" )
 				end
-				
+
 				if ( L(prefix.."warning_"..data.String) ) then
 					local help = vgui.Create( "DLabel", list )
 					help:SetText( L(prefix.."warning_"..data.String) )
@@ -1594,15 +1607,15 @@ if ( CLIENT ) then
 					help:SetFont( "DermaDefault" )
 					help:SetTextColor( Color( 200, 0, 0 ) )
 				end
-				
+
 				cvars.AddChangeCallback( mode.."_"..data.String, function( name, old, new )
 					if ( not IsValid( slider ) ) then return end
 					slider:SetValue( GetConVar( mode.."_"..data.String ):GetFloat(), true )
 				end, mode.."_"..data.String.."_utilities" )
 			end
-			
-			
-			
+
+
+
 			local checkboxes = {
 				"freeze",
 				"weld",
@@ -1618,7 +1631,7 @@ if ( CLIENT ) then
 				draw.RoundedBox( 0, 0, 0, w, h, bg )
 			end
 			cpanel:AddItem( cblist )
-			
+
 			for k, data in pairs( checkboxes ) do
 				local list = vgui.Create( "DListLayout", cblist )
 				list:DockPadding( 5, 5, 5, 5 )
@@ -1627,7 +1640,7 @@ if ( CLIENT ) then
 				function list:Paint( w, h )
 					draw.RoundedBox( 0, 0, 0, w, h, fg )
 				end
-			
+
 				local cb = vgui.Create( "DCheckBoxLabel", list )
 				cb:SetText( L(prefix.."checkbox_"..data) )
 				cb:SetChecked( GetConVar( mode.."_force_"..data ):GetBool() )
@@ -1638,14 +1651,14 @@ if ( CLIENT ) then
 				if ( data == "nocollide_all" ) then
 					cb:SetDisabled( true )
 				end
-				
+
 				function cb:OnChange( bool ) RunConsoleCommand( mode.."_set_force_"..data, bool and "1" or "0" ) end
-				
+
 				cvars.AddChangeCallback( mode.."_force_"..data, function( name, old, new )
 					if ( not IsValid( cb ) ) then return end
 					cb:SetChecked( tobool( new ) )
 				end, mode.."_"..data.."_utilities" )
-				
+
 				if ( L(prefix.."help_"..data) ) then
 					local help = vgui.Create( "DLabel", list )
 					help:SetText( L(prefix.."help_"..data) )
@@ -1655,7 +1668,7 @@ if ( CLIENT ) then
 					help:SetAutoStretchVertical( true )
 					help:SetFont( "DermaDefault" )
 				end
-				
+
 				if ( L(prefix.."warning_"..data) ) then
 					local help = vgui.Create( "DLabel", list )
 					help:SetText( L(prefix.."warning_"..data) )
