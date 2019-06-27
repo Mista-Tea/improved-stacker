@@ -414,7 +414,7 @@ elseif ( SERVER ) then
 	function TOOL:SendError( str )		
 		net.Start( mode.."_error" )
 			net.WriteString( str )
-			net.WriteUInt( notify or NOTIFY_ERROR, MIN_NOTIFY_BITS )
+			net.WriteUInt( NOTIFY_ERROR, MIN_NOTIFY_BITS )
 		net.Send( self:GetOwner() )
 	end
 
