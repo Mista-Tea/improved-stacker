@@ -494,9 +494,9 @@ localify.Bind( "ru", prefix.."combobox_sandbox",         "Sandbox" )
 localify.Bind( "ru", prefix.."combobox_darkrp",          "DarkRP" )
 localify.Bind( "ru", prefix.."combobox_singleplayer",    "Одиночная игра" )
 -- HUD
-localify.Bind( "ru", prefix.."hud_front",                "X" )
-localify.Bind( "ru", prefix.."hud_right",                "Z" )
-localify.Bind( "ru", prefix.."hud_up",                   "Y" )
+localify.Bind( "ru", prefix.."hud_front",                "Перед" )
+localify.Bind( "ru", prefix.."hud_right",                "Право" )
+localify.Bind( "ru", prefix.."hud_up",                   "Верх" )
 -- Help
 localify.Bind( "ru", prefix.."help_max_per_player",      "Максимальное количество предметов, которые могут быть стаканы в один момент." )
 localify.Bind( "ru", prefix.."help_max_per_stack",       "Максимальное количество предметов в стаке (ЛКМ)." )
