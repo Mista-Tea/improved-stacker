@@ -423,8 +423,8 @@ localify.Bind( "pl", prefix.."warning_nocollide_all",    "NIE ZMIENIAJ JEŚLI SE
 
 -- Tool Settings
 localify.Bind( "ru", prefix.."name",                     "Стакер - Улучшенный" )
-localify.Bind( "ru", prefix.."desc",                     "Легко стакайте дублицированные предиеты в любом направлении" )
-localify.Bind( "ru", prefix.."left",                     "Создать стак" )
+localify.Bind( "ru", prefix.."desc",                     "Легко дублируйте предметы в любом направлении" )
+localify.Bind( "ru", prefix.."left",                     "Стакать" )
 localify.Bind( "ru", prefix.."shift_left",               "Увеличить размер стака" )
 localify.Bind( "ru", prefix.."right",                    "Создать одиночный предмет" )
 localify.Bind( "ru", prefix.."shift_right",              "Уменьшить размер стака" )
@@ -438,7 +438,7 @@ localify.Bind( "ru", prefix.."error_max_per_stack",      "Максимально
 localify.Bind( "ru", prefix.."error_too_quick",          "Вы используете стакер слишком быстро" )
 localify.Bind( "ru", prefix.."error_max_per_player",     "Достигнуто максимальное количество предметов" )
 localify.Bind( "ru", prefix.."error_not_in_world",       "Стаканные предметы должны появляться в мире" )
-localify.Bind( "ru", prefix.."error_max_constraints",    "Не удалось создать ограничение, скорее всего, закончились слоты сущностей" )
+localify.Bind( "ru", prefix.."error_max_constraints",    "Не удалось создать соединение, скорее всего, закончились слоты сущностей" )
 -- Labels
 localify.Bind( "ru", prefix.."label_presets",            "Готовые настройки стака: " )
 localify.Bind( "ru", prefix.."label_relative",           "Стак относителен к: " )
@@ -494,9 +494,9 @@ localify.Bind( "ru", prefix.."combobox_sandbox",         "Sandbox" )
 localify.Bind( "ru", prefix.."combobox_darkrp",          "DarkRP" )
 localify.Bind( "ru", prefix.."combobox_singleplayer",    "Одиночная игра" )
 -- HUD
-localify.Bind( "ru", prefix.."hud_front",                "Перед" )
-localify.Bind( "ru", prefix.."hud_right",                "Право" )
-localify.Bind( "ru", prefix.."hud_up",                   "Верх" )
+localify.Bind( "ru", prefix.."hud_front",                "X" )
+localify.Bind( "ru", prefix.."hud_right",                "Z" )
+localify.Bind( "ru", prefix.."hud_up",                   "Y" )
 -- Help
 localify.Bind( "ru", prefix.."help_max_per_player",      "Максимальное количество предметов, которые могут быть стаканы в один момент." )
 localify.Bind( "ru", prefix.."help_max_per_stack",       "Максимальное количество предметов в стаке (ЛКМ)." )
