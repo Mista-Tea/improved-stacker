@@ -30,6 +30,7 @@
 	- Oct 27th, 2017 :: Small client optimization, reverted nocollide implementation back to original
 	- Apr 14th, 2018 :: Added French language support
 	- Oct 12th, 2018 :: Added Polish language support
+	- Jul 21st, 2019 :: Added Russian language support
 
 ### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
