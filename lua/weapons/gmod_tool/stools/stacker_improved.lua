@@ -1424,14 +1424,6 @@ if ( CLIENT ) then
 			MenuButton = 0,
 			Options    = languageOptions,
 		}
-
-		-- listen for changes to the localify language and reload the tool's menu to update the localizations
-		cvars.AddChangeCallback( "localify_language", function( name, old, new )
-			local cpanel = controlpanel.Get( mode )
-			if ( not IsValid( cpanel ) ) then return end
-			cpanel:ClearControls()
-			buildCPanel( cpanel )
-		end, "improvedstacker" )
 		
 		cpanel:AddControl( "ComboBox", languages )
 		cpanel:ControlHelp( "\n" .. L(prefix.."label_credits") )
@@ -1478,6 +1470,14 @@ if ( CLIENT ) then
 		buildCPanel( cpanel )
 	end )
 
+	-- listen for changes to the localify language and reload the tool's menu to update the localizations
+	cvars.AddChangeCallback( "localify_language", function( name, old, new )
+		local cpanel = controlpanel.Get( mode )
+		if ( not IsValid( cpanel ) ) then return end
+		cpanel:ClearControls()
+		buildCPanel( cpanel )
+	end, "improvedstacker" )
+	
 	TOOL.BuildCPanel = buildCPanel
 
 	--[[--------------------------------------------------------------------------
