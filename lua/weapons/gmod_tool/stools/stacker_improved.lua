@@ -159,7 +159,7 @@ local showSettings = false
 --------------------------------------------------------------------------]]--
 
 TOOL.Category = "Construction"
-TOOL.Name     = "#tool."..mode..".name"
+TOOL.Name     = L(prefix.."name")
 
 TOOL.Information = {
 	"left",
