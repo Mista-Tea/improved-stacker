@@ -32,6 +32,7 @@
 		- Apr 14th, 2018 :: Added French language support
 		- Oct 12th, 2018 :: Added Polish language support
 		- Jul 21st, 2019 :: Added Russian language support
+		- Jul 23rd, 2019 :: Added Simplified Chinese language support
 		
 		Fixes:
 			- Prevented crash from players using very high X/Y/Z offset values.

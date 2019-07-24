@@ -2,11 +2,12 @@
 
 local prefix = "#tool.stacker_improved."
 
-localify.Bind( "en", prefix.."language_en",    "English" )
-localify.Bind( "bg", prefix.."language_bg",    "Български" )
-localify.Bind( "fr", prefix.."language_fr",    "Français" )
-localify.Bind( "pl", prefix.."language_pl",    "Polski" )
-localify.Bind( "ru", prefix.."language_ru",    "Русский" )
+localify.Bind( "en",    prefix.."language_en",    "English" )
+localify.Bind( "bg",    prefix.."language_bg",    "Български" )
+localify.Bind( "fr",    prefix.."language_fr",    "Français" )
+localify.Bind( "pl",    prefix.."language_pl",    "Polski" )
+localify.Bind( "ru",    prefix.."language_ru",    "Русский" )
+localify.Bind( "zh-cn", prefix.."language_zh-cn", "简体中文" )
 
 --[[--------------------------------------------------------------------------
 -- English Localization
@@ -416,7 +417,6 @@ localify.Bind( "pl", prefix.."warning_weld",             "Dla DarkRP." )
 localify.Bind( "pl", prefix.."warning_nocollide",        "Dla DarkRP." )
 localify.Bind( "pl", prefix.."warning_nocollide_all",    "NIE ZMIENIAJ JEŚLI SERWER JEST WŁĄCZONY. To używa GM.ShouldCollide i jest eksperymentalne. Działa i zapobiega awarii serwera spowodowanymi Stackerem, ale wymaga dalszych testów." )
 
-
 --[[--------------------------------------------------------------------------
 -- Russian Localization
 --------------------------------------------------------------------------]]--
@@ -519,6 +519,107 @@ localify.Bind( "ru", prefix.."warning_weld",             "Для DarkRP." )
 localify.Bind( "ru", prefix.."warning_nocollide",        "Для DarkRP." )
 localify.Bind( "ru", prefix.."warning_nocollide_all",    "НЕ ИЗМЕНЯЙТЕ ВО ВРЕМЯ РАБОТЫ СЕРВЕРА. Это использует экспериментальный GM.ShouldCollide. Это работает и гарантированно предотвращает сбои в Stacker, но требует дополнительного тестирования." )
 
+--[[--------------------------------------------------------------------------
+-- Russian Localization
+--------------------------------------------------------------------------]]--
+
+-- Tool Settings
+localify.Bind( "zh-cn", prefix.."name",                     "叠加器 - 改进" )
+localify.Bind( "zh-cn", prefix.."desc",                     "轻易在任何方向复制物品" )
+localify.Bind( "zh-cn", prefix.."left",                     "进行一次叠加" )
+localify.Bind( "zh-cn", prefix.."shift_left",               "增加叠加大小" )
+localify.Bind( "zh-cn", prefix.."right",                    "叠加单个物品" )
+localify.Bind( "zh-cn", prefix.."shift_right",              "减少叠加大小" )
+localify.Bind( "zh-cn", prefix.."reload",                   "改变叠加方向" )
+localify.Bind( "zh-cn", "Undone_stacker_improved",          "撤回叠加物品" )
+-- Errors
+localify.Bind( "zh-cn", prefix.."error_blocked_by_server",  "服务器禁止你修改这个控制台参数" )
+localify.Bind( "zh-cn", prefix.."error_not_admin",          "你必须是管理员才能修改这个控制台参数" )
+localify.Bind( "zh-cn", prefix.."error_invalid_argument",   "你必须输入一个合法数字" )
+localify.Bind( "zh-cn", prefix.."error_max_per_stack",      "单次叠加物品的上限是 " )
+localify.Bind( "zh-cn", prefix.."error_too_quick",          "你叠加器使用得太快了" )
+localify.Bind( "zh-cn", prefix.."error_max_per_player",     "叠加器达到了物品上限" )
+localify.Bind( "zh-cn", prefix.."error_not_in_world",       "叠加的物品必须生成在地图内部" )
+localify.Bind( "zh-cn", prefix.."error_max_constraints",    "约束生成失败，很可能是达到了实体上限" )
+-- Labels
+localify.Bind( "zh-cn", prefix.."label_presets",            "叠加器预设：" )
+localify.Bind( "zh-cn", prefix.."label_relative",           "叠加相对方向：" )
+localify.Bind( "zh-cn", prefix.."label_direction",          "叠加方向：" )
+localify.Bind( "zh-cn", prefix.."label_count",              "叠加大小：" )
+localify.Bind( "zh-cn", prefix.."label_reset_offsets",      "重置位差" )
+localify.Bind( "zh-cn", prefix.."label_reset_angles",       "重置角度" )
+localify.Bind( "zh-cn", prefix.."label_show_settings",      "点击显示设置" )
+localify.Bind( "zh-cn", prefix.."label_hide_settings",      "点击隐藏设置" )
+localify.Bind( "zh-cn", prefix.."label_x",                  "X  (-后, +前)" )
+localify.Bind( "zh-cn", prefix.."label_y",                  "Y  (-左, +右)" )
+localify.Bind( "zh-cn", prefix.."label_z",                  "Z  (-下, +上)" )
+localify.Bind( "zh-cn", prefix.."label_pitch",              "Pitch  (-下, +上)" )
+localify.Bind( "zh-cn", prefix.."label_yaw",                "Yaw    (-左, +右)" )
+localify.Bind( "zh-cn", prefix.."label_roll",               "Roll    (-左, +右)" )
+localify.Bind( "zh-cn", prefix.."label_language",           "语言: " )
+localify.Bind( "zh-cn", prefix.."label_credits",            "翻译： 8Z (STEAM_0:0:33380074)" )
+localify.Bind( "zh-cn", prefix.."label_max_per_stack",      "单次叠加上限" )
+localify.Bind( "zh-cn", prefix.."label_max_per_player",     "玩家叠加物品上限" )
+localify.Bind( "zh-cn", prefix.."label_max_offsetx",        "最大 X 位差" )
+localify.Bind( "zh-cn", prefix.."label_max_offsety",        "最大 Y 位差" )
+localify.Bind( "zh-cn", prefix.."label_max_offsetz",        "最大 Z 位差" )
+localify.Bind( "zh-cn", prefix.."label_delay",              "冷却" )
+localify.Bind( "zh-cn", prefix.."label_opacity",            "透明度" )
+-- Checkboxes
+localify.Bind( "zh-cn", prefix.."checkbox_freeze",          "固定叠加物品" )
+localify.Bind( "zh-cn", prefix.."checkbox_weld",            "焊接叠加物品" )
+localify.Bind( "zh-cn", prefix.."checkbox_nocollide",       "叠加互相无碰撞" )
+localify.Bind( "zh-cn", prefix.."checkbox_nocollide_all",   "叠加全部无碰撞" )
+localify.Bind( "zh-cn", prefix.."checkbox_use_shift_key",   "更改叠加大小使用 SHIFT+左键/右键" )
+localify.Bind( "zh-cn", prefix.."checkbox_relative",        "叠加使用新物品的相对角度" )
+localify.Bind( "zh-cn", prefix.."checkbox_material",        "应用材质" )
+localify.Bind( "zh-cn", prefix.."checkbox_color",           "应用颜色" )
+localify.Bind( "zh-cn", prefix.."checkbox_physprop",        "应用物理特性" )
+localify.Bind( "zh-cn", prefix.."checkbox_ghost",           "所有叠加物品显示预览" )
+localify.Bind( "zh-cn", prefix.."checkbox_halo",            "物品预览光环效果" )
+localify.Bind( "zh-cn", prefix.."checkbox_halo_color",      "光环颜色" )
+localify.Bind( "zh-cn", prefix.."checkbox_axis",            "显示 XYZ 轴" )
+localify.Bind( "zh-cn", prefix.."checkbox_axis_labels",     "显示 XYZ 轴标签" )
+localify.Bind( "zh-cn", prefix.."checkbox_axis_angles",     "显示 XYZ 轴角度" )
+localify.Bind( "zh-cn", prefix.."checkbox_stayinworld",     "叠加限定在地图内部" )
+-- Comboboxes
+localify.Bind( "zh-cn", prefix.."combobox_world",           "世界" )
+localify.Bind( "zh-cn", prefix.."combobox_prop",            "物品" )
+localify.Bind( "zh-cn", prefix.."combobox_direction_up",    "上" )
+localify.Bind( "zh-cn", prefix.."combobox_direction_down",  "下" )
+localify.Bind( "zh-cn", prefix.."combobox_direction_front", "前" )
+localify.Bind( "zh-cn", prefix.."combobox_direction_back",  "后" )
+localify.Bind( "zh-cn", prefix.."combobox_direction_right", "右" )
+localify.Bind( "zh-cn", prefix.."combobox_direction_left",  "左" )
+localify.Bind( "zh-cn", prefix.."combobox_default",         "默认" )
+localify.Bind( "zh-cn", prefix.."combobox_sandbox",         "沙盘" )
+localify.Bind( "zh-cn", prefix.."combobox_darkrp",          "DarkRP" )
+localify.Bind( "zh-cn", prefix.."combobox_singleplayer",    "单人" )
+-- HUD
+localify.Bind( "zh-cn", prefix.."hud_front",                "前" )
+localify.Bind( "zh-cn", prefix.."hud_right",                "右" )
+localify.Bind( "zh-cn", prefix.."hud_up",                   "上" )
+-- Help
+localify.Bind( "zh-cn", prefix.."help_max_per_player",      "每个玩家堆叠物品的数量上限。" )
+localify.Bind( "zh-cn", prefix.."help_max_per_stack",       "单次堆叠（左键）时的物品上限。" )
+localify.Bind( "zh-cn", prefix.."help_delay",               "每次使用堆叠器（左键/右键）后的冷却。" )
+localify.Bind( "zh-cn", prefix.."help_max_offsetx",         "叠加物品间的最大位差（X轴）。" )
+localify.Bind( "zh-cn", prefix.."help_max_offsety",         "叠加物品间的最大位差（Y轴）。" )
+localify.Bind( "zh-cn", prefix.."help_max_offsetz",         "叠加物品间的最大位差（Z轴）。" )
+localify.Bind( "zh-cn", prefix.."help_freeze",              "叠加的物品刷出后固定。" )
+localify.Bind( "zh-cn", prefix.."help_weld",                "叠加的物品刷出后互相焊接。" )
+localify.Bind( "zh-cn", prefix.."help_nocollide",           "叠加的物品和其他叠加物品无碰撞。" )
+localify.Bind( "zh-cn", prefix.."help_nocollide_all",       "叠加的物品只会和玩家，NPC，车辆和世界碰撞。" )
+localify.Bind( "zh-cn", prefix.."help_stayinworld",         "避免叠加的物品刷出在地图外部。" )
+-- Warnings
+localify.Bind( "zh-cn", prefix.."warning_max_per_player",   "主要用于角色扮演模式的设置。沙盘模式下这个应该是无限的（-1）。" )
+localify.Bind( "zh-cn", prefix.."warning_max_offsetx",      "主要用于角色扮演模式的设置。如果你不确定这是什么，不要修改。" )
+localify.Bind( "zh-cn", prefix.."warning_max_offsety",      "主要用于角色扮演模式的设置。如果你不确定这是什么，不要修改。" )
+localify.Bind( "zh-cn", prefix.."warning_max_offsetz",      "主要用于角色扮演模式的设置。如果你不确定这是什么，不要修改。" )
+localify.Bind( "zh-cn", prefix.."warning_freeze",           "提供给 DarkRP 的设置。" )
+localify.Bind( "zh-cn", prefix.."warning_weld",             "提供给 DarkRP 的设置。" )
+localify.Bind( "zh-cn", prefix.."warning_nocollide",        "提供给 DarkRP 的设置。" )
+localify.Bind( "zh-cn", prefix.."warning_nocollide_all",    "绝对不要在服务器运作时修改！这个实验性的功能调用 GM.ShouldCollide。这个设置管用且必定能够避免叠加器崩服，但需要更多的测试。" )
 
 --[[--------------------------------------------------------------------------
 -- <Other> Localization
