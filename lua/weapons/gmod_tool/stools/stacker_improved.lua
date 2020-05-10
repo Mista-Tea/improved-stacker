@@ -33,6 +33,7 @@
 		- Oct 12th, 2018 :: Added Polish language support
 		- Jul 21st, 2019 :: Added Russian language support
 		- Jul 23rd, 2019 :: Added Simplified Chinese language support
+		- May 20th, 2020 :: Fixed clientside ghosts caused by ents.CreateClientProp changes
 		
 		Fixes:
 			- Prevented crash from players using very high X/Y/Z offset values.
@@ -1067,7 +1068,7 @@ if ( CLIENT ) then
 		
 		-- loop for the total stack size and create a new ghost prop
 		for i = 1, count do
-			ghost = ents.CreateClientProp( entMod )
+			ghost = ClientsideModel( entMod )
 			
 			if ( not IsValid( ghost ) ) then continue end
 
