@@ -33,6 +33,7 @@
 	- Jul 21st, 2019 :: Added Russian language support
 	- Jul 23rd, 2019 :: Added Simplified Chinese language support
 	- May 10th, 2020 :: Fixed clientside ghosts caused by ents.CreateClientProp changes
+	- Jun 18th, 2020 :: Clientside performance improvement when tool is not selected
 
 ### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.
