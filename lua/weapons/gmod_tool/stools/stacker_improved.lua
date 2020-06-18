@@ -1183,20 +1183,21 @@ if ( CLIENT ) then
 	--	will be called way more than it needs to be and causes horrible FPS drops in singleplayer.
 	--]]--
 	hook.Add( "PreDrawHalos", mode.."_predrawhalos", function()
+		-- check if the player has fully initialized
 		local ply = LocalPlayer()
 		if ( not IsValid( ply ) ) then return end
 		
-		-- check if we're looking at a valid entity
-		local lookingAt = ply:GetEyeTrace().Entity
-		if ( not ( IsValid( lookingAt ) and lookingAt:GetClass() == "prop_physics" ) ) then
+		-- check if they have the toolgun out and have stacker selected
+		local wep = ply:GetActiveWeapon()
+		if ( not ( IsValid( wep ) and wep:GetClass() == "gmod_tool" and cvarTool and cvarTool:GetString() == mode ) ) then
 			improvedstacker.ReleaseGhosts()
 			improvedstacker.SetLookedAt( nil )
 			return
 		end
 		
-		-- check if they have the toolgun out and have stacker selected
-		local wep = ply:GetActiveWeapon()
-		if ( not ( IsValid( wep ) and wep:GetClass() == "gmod_tool" and cvarTool and cvarTool:GetString() == mode ) ) then
+		-- check if we're looking at a valid entity
+		local lookingAt = ply:GetEyeTrace().Entity
+		if ( not ( IsValid( lookingAt ) and lookingAt:GetClass() == "prop_physics" ) ) then
 			improvedstacker.ReleaseGhosts()
 			improvedstacker.SetLookedAt( nil )
 			return
@@ -1255,21 +1256,23 @@ if ( CLIENT ) then
 	
 	hook.Add( "PostDrawTranslucentRenderables", mode.."_directions", function( drawingDepth, drawingSky )
 		if ( drawingSky ) then return end
+		
+		-- check if the player has fully initialized
 		local ply = LocalPlayer()
 		if ( not IsValid( ply ) ) then return end
 		
 		-- check if we want to draw the axis at all
 		if ( not ( cvarAxis and cvarAxis:GetBool() ) ) then return end
 		
-		-- check if we're looking at a valid entity
-		local ent = ply:GetEyeTrace().Entity
-		if ( not IsValid( ent ) ) then
-			return
-		end
-		
 		-- check if they have the toolgun out and have stacker selected
 		local wep = ply:GetActiveWeapon()
 		if ( not ( IsValid( wep ) and wep:GetClass() == "gmod_tool" and cvarTool and cvarTool:GetString() == mode ) ) then
+			return
+		end
+		
+		-- check if we're looking at a valid entity
+		local ent = ply:GetEyeTrace().Entity
+		if ( not IsValid( ent ) ) then
 			return
 		end
 		
