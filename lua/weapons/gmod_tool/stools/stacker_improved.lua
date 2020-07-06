@@ -182,33 +182,35 @@ TOOL.Information = {
 
 if ( CLIENT ) then
 
-	TOOL.ClientConVar[ "mode" ]          = improvedstacker.MODE_PROP
-	TOOL.ClientConVar[ "direction" ]     = improvedstacker.DIRECTION_UP
-	TOOL.ClientConVar[ "count" ]         = "1"
-	TOOL.ClientConVar[ "freeze" ]        = "1"
-	TOOL.ClientConVar[ "weld" ]          = "1"
-	TOOL.ClientConVar[ "nocollide" ]     = "1"
-	TOOL.ClientConVar[ "ghostall" ]      = "1"
-	TOOL.ClientConVar[ "material" ]      = "1"
-	TOOL.ClientConVar[ "physprop" ]      = "1"
-	TOOL.ClientConVar[ "color" ]         = "1"
-	TOOL.ClientConVar[ "offsetx" ]       = "0"
-	TOOL.ClientConVar[ "offsety" ]       = "0"
-	TOOL.ClientConVar[ "offsetz" ]       = "0"
-	TOOL.ClientConVar[ "pitch" ]         = "0"
-	TOOL.ClientConVar[ "yaw" ]           = "0"
-	TOOL.ClientConVar[ "roll" ]          = "0"
-	TOOL.ClientConVar[ "relative" ]      = "1"
-	TOOL.ClientConVar[ "draw_halos" ]    = "0"
-	TOOL.ClientConVar[ "halo_r" ]        = "255"
-	TOOL.ClientConVar[ "halo_g" ]        = "0"
-	TOOL.ClientConVar[ "halo_b" ]        = "0"
-	TOOL.ClientConVar[ "halo_a" ]        = "255"
-	TOOL.ClientConVar[ "draw_axis" ]     = "1"
-	TOOL.ClientConVar[ "axis_labels" ]   = "1"
-	TOOL.ClientConVar[ "axis_angles" ]   = "0"
-	TOOL.ClientConVar[ "opacity" ]       = "100"
-	TOOL.ClientConVar[ "use_shift_key" ] = "0"
+	TOOL.ClientConVar[ "mode" ]            = improvedstacker.MODE_PROP
+	TOOL.ClientConVar[ "direction" ]       = improvedstacker.DIRECTION_UP
+	TOOL.ClientConVar[ "count" ]           = "1"
+	TOOL.ClientConVar[ "freeze" ]          = "1"
+	TOOL.ClientConVar[ "weld" ]            = "1"
+	TOOL.ClientConVar[ "nocollide" ]       = "1"
+	TOOL.ClientConVar[ "ghostall" ]        = "1"
+	TOOL.ClientConVar[ "material" ]        = "1"
+	TOOL.ClientConVar[ "physprop" ]        = "1"
+	TOOL.ClientConVar[ "color" ]           = "1"
+	TOOL.ClientConVar[ "offsetx" ]         = "0"
+	TOOL.ClientConVar[ "offsety" ]         = "0"
+	TOOL.ClientConVar[ "offsetz" ]         = "0"
+	TOOL.ClientConVar[ "pitch" ]           = "0"
+	TOOL.ClientConVar[ "yaw" ]             = "0"
+	TOOL.ClientConVar[ "roll" ]            = "0"
+	TOOL.ClientConVar[ "relative" ]        = "1"
+	TOOL.ClientConVar[ "draw_halos" ]      = "0"
+	TOOL.ClientConVar[ "halo_r" ]          = "255"
+	TOOL.ClientConVar[ "halo_g" ]          = "0"
+	TOOL.ClientConVar[ "halo_b" ]          = "0"
+	TOOL.ClientConVar[ "halo_a" ]          = "255"
+	TOOL.ClientConVar[ "draw_axis" ]       = "1"
+	TOOL.ClientConVar[ "axis_labels" ]     = "1"
+	TOOL.ClientConVar[ "axis_angles" ]     = "0"
+	TOOL.ClientConVar[ "opacity" ]         = "100"
+	TOOL.ClientConVar[ "use_shift_key" ]   = "0"
+	TOOL.ClientConVar[ "offset_decimals" ] = "2"
+	TOOL.ClientConVar[ "rotate_decimals" ] = "2"
 
 	--[[--------------------------------------------------------------------------
 	-- Language Settings
@@ -955,6 +957,8 @@ if ( CLIENT ) then
 	local cvarAxis       = GetConVar( mode.."_draw_axis" )
 	local cvarAxisLbl    = GetConVar( mode.."_axis_labels" )
 	local cvarAxisAng    = GetConVar( mode.."_axis_angles" )
+	local cvarOffsetDecs = GetConVar( mode.."_offset_decimals" )
+	local cvarRotateDecs = GetConVar( mode.."_rotate_decimals" )
 	
 	-- offsets for drawing the axis arrows
 	local o1 = Vector(     0, 0,  0.05 )
@@ -1041,6 +1045,8 @@ if ( CLIENT ) then
 		cvarAxis       = GetConVar( mode.."_draw_axis" )
 		cvarAxisLbl    = GetConVar( mode.."_axis_labels" )
 		cvarAxisAng    = GetConVar( mode.."_axis_angles" )
+		cvarOffsetDecs = GetConVar( mode.."_offset_decimals" )
+		cvarRotateDecs = GetConVar( mode.."_rotate_decimals" )
 	end
 	
 	--[[--------------------------------------------------------------------------
@@ -1326,9 +1332,7 @@ if ( CLIENT ) then
 		
 	end )
 	
-end
-
-if ( CLIENT ) then
+	
 	--[[--------------------------------------------------------------------------
 	--
 	-- 	TOOL.BuildCPanel( panel )
@@ -1344,31 +1348,35 @@ if ( CLIENT ) then
 			Folder     = mode,
 			Options = {
 				[L(prefix.."combobox_default")] = {
-					[mode.."_mode"]        = tostring(improvedstacker.MODE_PROP),
-					[mode.."_direction"]   = tostring(improvedstacker.DIRECTION_UP),
-					[mode.."_count"]       = "1",
-					[mode.."_freeze"]      = "1",
-					[mode.."_weld"]        = "1",
-					[mode.."_nocollide"]   = "1",
-					[mode.."_ghostall"]    = "1",
-					[mode.."_material"]    = "1",
-					[mode.."_physprop"]    = "1",
-					[mode.."_color"]       = "1",
-					[mode.."_offsetx"]     = "0",
-					[mode.."_offsety"]     = "0",
-					[mode.."_offsetz"]     = "0",
-					[mode.."_pitch"]       = "0",
-					[mode.."_yaw"]         = "0",
-					[mode.."_roll"]        = "0",
-					[mode.."_relative"]    = "1",
-					[mode.."_draw_halos"]  = "0",
-					[mode.."_halo_r"]      = "255",
-					[mode.."_halo_g"]      = "0",
-					[mode.."_halo_b"]      = "0",
-					[mode.."_halo_a"]      = "255",
-					[mode.."_draw_axis"]   = "1",
-					[mode.."_axis_labels"] = "1",
-					[mode.."_axis_angles"] = "0",
+					[mode.."_mode"]             = tostring(improvedstacker.MODE_PROP),
+					[mode.."_direction"]        = tostring(improvedstacker.DIRECTION_UP),
+					[mode.."_count"]            = "1",
+					[mode.."_freeze"]           = "1",
+					[mode.."_weld"]             = "1",
+					[mode.."_nocollide"]        = "1",
+					[mode.."_ghostall"]         = "1",
+					[mode.."_material"]         = "1",
+					[mode.."_physprop"]         = "1",
+					[mode.."_color"]            = "1",
+					[mode.."_offsetx"]          = "0",
+					[mode.."_offsety"]          = "0",
+					[mode.."_offsetz"]          = "0",
+					[mode.."_pitch"]            = "0",
+					[mode.."_yaw"]              = "0",
+					[mode.."_roll"]             = "0",
+					[mode.."_relative"]         = "1",
+					[mode.."_draw_halos"]       = "0",
+					[mode.."_halo_r"]           = "255",
+					[mode.."_halo_g"]           = "0",
+					[mode.."_halo_b"]           = "0",
+					[mode.."_halo_a"]           = "255",
+					[mode.."_draw_axis"]        = "1",
+					[mode.."_axis_labels"]      = "1",
+					[mode.."_axis_angles"]      = "0",
+					[mode.."_opacity" ]         = "100",
+					[mode.."_use_shift_key" ]   = "0",
+					--[mode.."_offset_decimals" ] = "2",
+					--[mode.."_rotate_decimals" ] = "2",
 				},
 			},
 			CVars = { 
@@ -1397,6 +1405,10 @@ if ( CLIENT ) then
 				mode.."_draw_axis",
 				mode.."_axis_labels",
 				mode.."_axis_angles",
+				mode.."_opacity",
+				mode.."_use_shift_key",
+				--mode.."_offset_decimals",
+				--mode.."_rotate_decimals",
 			}
 		}
 		
@@ -1435,56 +1447,65 @@ if ( CLIENT ) then
 		
 		cpanel:AddControl( "ComboBox", languages )
 		cpanel:ControlHelp( "\n" .. L(prefix.."label_credits") )
-		cpanel:AddControl( "Label",    { Text = L(prefix.."label_presets") } )
+		cpanel:Help( L(prefix.."label_presets") )
 		cpanel:AddControl( "ComboBox", presets )
-		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_freeze"),    Command = mode.."_freeze" } )
-		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_weld"),      Command = mode.."_weld" } )
-		cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_nocollide"), Command = mode.."_nocollide" } )	
+		cpanel:CheckBox( L(prefix.."checkbox_freeze"),    mode.."_freeze" )
+		cpanel:CheckBox( L(prefix.."checkbox_weld"),      mode.."_weld" )
+		cpanel:CheckBox( L(prefix.."checkbox_nocollide"), mode.."_nocollide" )	
 		cpanel:AddControl( "ComboBox", relative )	
 		cpanel:AddControl( "ComboBox", directions )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_count"), Min = 1, Max = cvarMaxPerStack:GetInt(), Command = mode.."_count", Description = "How many props to create in each stack" } )
-		cpanel:AddControl( "Button",   { Label = L(prefix.."label_reset_offsets"), Command = mode.."_reset_offsets" } )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_x"),     Type = "Float", Min = - cvarMaxOffX:GetInt(), Max = cvarMaxOffX:GetInt(), Value = 0, Command = mode.."_offsetx" } )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_y"),     Type = "Float", Min = - cvarMaxOffY:GetInt(), Max = cvarMaxOffY:GetInt(), Value = 0, Command = mode.."_offsety" } )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_z"),     Type = "Float", Min = - cvarMaxOffZ:GetInt(), Max = cvarMaxOffZ:GetInt(), Value = 0, Command = mode.."_offsetz" } )
-		cpanel:AddControl( "Button",   { Label = L(prefix.."label_reset_angles"),  Command = mode.."_reset_angles" } )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_pitch"), Type = "Float", Min = -MAX_ANGLE,  Max = MAX_ANGLE,  Value = 0, Command = mode.."_pitch" } )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_yaw"),   Type = "Float", Min = -MAX_ANGLE,  Max = MAX_ANGLE,  Value = 0, Command = mode.."_yaw" } )
-		cpanel:AddControl( "Slider",   { Label = L(prefix.."label_roll"),  Type = "Float", Min = -MAX_ANGLE,  Max = MAX_ANGLE,  Value = 0, Command = mode.."_roll" } )
+		cpanel:NumSlider( L(prefix.."label_count"), mode.."_count", 1, cvarMaxPerStack:GetInt(), 0 ) -- How many props to create in each stack
+		cpanel:Button( L(prefix.."label_reset_offsets"), mode.."_reset_offsets" )
+		cpanel:NumSlider( L(prefix.."label_x"), mode.."_offsetx", -cvarMaxOffX:GetInt(), cvarMaxOffX:GetInt(), cvarOffsetDecs:GetInt() )
+		cpanel:NumSlider( L(prefix.."label_y"), mode.."_offsety", -cvarMaxOffY:GetInt(), cvarMaxOffY:GetInt(), cvarOffsetDecs:GetInt() )
+		cpanel:NumSlider( L(prefix.."label_z"), mode.."_offsetz", -cvarMaxOffZ:GetInt(), cvarMaxOffZ:GetInt(), cvarOffsetDecs:GetInt() )
+		cpanel:Button( L(prefix.."label_reset_angles"),  mode.."_reset_angles" )
+		cpanel:NumSlider( L(prefix.."label_pitch"), mode.."_pitch", -MAX_ANGLE, MAX_ANGLE, cvarRotateDecs:GetInt() )
+		cpanel:NumSlider( L(prefix.."label_yaw"),   mode.."_yaw",   -MAX_ANGLE, MAX_ANGLE, cvarRotateDecs:GetInt() )
+		cpanel:NumSlider( L(prefix.."label_roll"),  mode.."_roll",  -MAX_ANGLE, MAX_ANGLE, cvarRotateDecs:GetInt() )
 		
-		cpanel:AddControl( "Button",   { Label = L(prefix.."label_"..(showSettings and "hide" or "show").."_settings"),   Command = mode.."_show_settings" } )
+		cpanel:Button( L(prefix.."label_"..(showSettings and "hide" or "show").."_settings"), mode.."_show_settings" )
 		
 		if ( showSettings ) then
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_use_shift_key"), Command = mode.."_use_shift_key", Description = "Toggles the ability to hold SHIFT and click the left and right mouse buttons to change stack size" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_relative"),      Command = mode.."_relative",      Description = "Stacks each prop relative to the prop right before it. This allows you to create curved stacks" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_material"),      Command = mode.."_material",      Description = "Applies the material of the original prop to all stacked props" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_color"),         Command = mode.."_color",         Description = "Applies the color of the original prop to all stacked props" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_physprop"),      Command = mode.."_physprop",      Description = "Applies the physical properties of the original prop to all stacked props" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_ghost"),         Command = mode.."_ghostall",      Description = "Creates every ghost prop in the stack instead of just the first ghost prop" } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis"),          Command = mode.."_draw_axis", } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis_labels"),   Command = mode.."_axis_labels", } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_axis_angles"),   Command = mode.."_axis_angles", } )
-			cpanel:AddControl( "Checkbox", { Label = L(prefix.."checkbox_halo"),          Command = mode.."_draw_halos", Description = "Gives halos to all of the props in to ghosted stack" } )
-			cpanel:AddControl( "Slider",   { Label = L(prefix.."label_opacity"), Type = "Integer", Min = 0, Max = 255, Command = mode.."_opacity" } )
+			cpanel:CheckBox( L(prefix.."checkbox_use_shift_key"), mode.."_use_shift_key" ) -- Toggles the ability to hold SHIFT and click the left and right mouse buttons to change stack size
+			cpanel:CheckBox( L(prefix.."checkbox_relative"),      mode.."_relative"      ) -- Stacks each prop relative to the prop right before it. This allows you to create curved stacks
+			cpanel:CheckBox( L(prefix.."checkbox_material"),      mode.."_material"      ) -- Applies the material of the original prop to all stacked props
+			cpanel:CheckBox( L(prefix.."checkbox_color"),         mode.."_color"         ) -- Applies the color of the original prop to all stacked props
+			cpanel:CheckBox( L(prefix.."checkbox_physprop"),      mode.."_physprop"      ) -- Applies the physical properties of the original prop to all stacked props
+			cpanel:CheckBox( L(prefix.."checkbox_ghost"),         mode.."_ghostall"      ) -- Creates every ghost prop in the stack instead of just the first ghost prop
+			cpanel:CheckBox( L(prefix.."checkbox_axis"),          mode.."_draw_axis"     )
+			cpanel:CheckBox( L(prefix.."checkbox_axis_labels"),   mode.."_axis_labels"   )
+			cpanel:CheckBox( L(prefix.."checkbox_axis_angles"),   mode.."_axis_angles"   )
+			cpanel:CheckBox( L(prefix.."checkbox_halo"),          mode.."_draw_halos"    ) -- Gives halos to all of the props in to ghosted stack
+			cpanel:NumSlider( L(prefix.."label_opacity"), mode.."_opacity", 0, 255, 0 )
 			cpanel:AddControl( "Color",    { Label = L(prefix.."checkbox_halo_color"), Red = mode.."_halo_r", Green = mode.."_halo_g", Blue = mode.."_halo_b", Alpha = mode.."_halo_a" } )
 		end
 	end
 	
-	concommand.Add( mode.."_show_settings", function( ply, cmd, args )
+	local function rebuildCPanel()
 		local cpanel = controlpanel.Get( mode )
 		if ( not IsValid( cpanel ) ) then return end
-		showSettings = not showSettings
 		cpanel:ClearControls()
 		buildCPanel( cpanel )
+	end
+	
+	concommand.Add( mode.."_show_settings", function( ply, cmd, args )
+		showSettings = not showSettings
+		rebuildCPanel()
 	end )
-
+	
 	-- listen for changes to the localify language and reload the tool's menu to update the localizations
 	cvars.AddChangeCallback( "localify_language", function( name, old, new )
-		local cpanel = controlpanel.Get( mode )
-		if ( not IsValid( cpanel ) ) then return end
-		cpanel:ClearControls()
-		buildCPanel( cpanel )
-	end, "improvedstacker" )
+		rebuildCPanel()
+	end, "improvedstacker_localify_language" )
+	
+	cvars.AddChangeCallback( mode.."_offset_decimals", function( name, old, new ) 
+		rebuildCPanel()
+	end, "improvedstacker_offset_decimals")
+	
+	cvars.AddChangeCallback( mode.."_rotate_decimals", function( name, old, new ) 
+		rebuildCPanel()
+	end, "improvedstacker_rotate_decimals")
 	
 	TOOL.BuildCPanel = buildCPanel
 
