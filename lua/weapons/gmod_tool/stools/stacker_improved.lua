@@ -617,10 +617,10 @@ function TOOL:LeftClick( tr, isRightClick )
 
 	if not ( IsValid( tr.Entity ) ) then return false end
 
-	local isNotProp
+	local sentClass
 	if ( tr.Entity:GetClass() ~= "prop_physics" ) then
 		if ( tr.Entity.Stackable and cvarAllowSents:GetBool() ) then
-			isNotProp = true
+			sentClass = tr.Entity:GetClass()
 		else
 			return false
 		end
@@ -697,11 +697,12 @@ function TOOL:LeftClick( tr, isRightClick )
 		-- check if the player has too many active stacker props spawned out already
 		local stackerEntsSpawned = self:GetNumberPlayerEnts()
 		if ( maxPerPlayer >= 0 and stackerEntsSpawned >= maxPerPlayer ) then self:SendError( ("%s (%s)"):format(L(prefix.."error_max_per_player", localify.GetLocale( self:GetOwner() )), maxPerPlayer) ) break end
+
 		-- check if the player has exceeded the sbox_maxprops cvar
-		if ( not self:GetSWEP():CheckLimit( "props" ) )            then break end
+		if ( not self:GetSWEP():CheckLimit( sentClass and "sents" or "props" ) ) then break end
 		-- check if external admin mods are blocking this entity
-		if ( hook.Run( "PlayerSpawnProp", ply, entMod ) == false ) then break end
-		
+		if ( hook.Run( sentClass and "PlayerSpawnSENT" or "PlayerSpawnProp", ply, sentClass or entMod ) == false ) then break end
+
 		-- if we're positioning the first entity in the stack (regardless of relative to PROP or WORLD), or
 		-- if we're stacking relative to PROP and on the previous rotation, update the new direction and offset
 		if ( i == 1 or ( stackMode == improvedstacker.MODE_PROP and stackRelative ) ) then
@@ -719,7 +720,7 @@ function TOOL:LeftClick( tr, isRightClick )
 		if ( stayInWorld and not util.IsInWorld( entPos ) ) then self:SendError( L(prefix.."error_not_in_world", localify.GetLocale( self:GetOwner() )) ) break end
 		
 		-- create the new stacked entity
-		if ( isNotProp ) then
+		if ( sentClass ) then
 			local data = duplicator.CopyEntTable( ent )
 			newEnt = duplicator.CreateEntityFromTable( ply, data )
 		else
@@ -736,8 +737,9 @@ function TOOL:LeftClick( tr, isRightClick )
 		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
 		-- remove or mark this entity so that those same functions (if overridden) can
 		-- detect that the entity came from Stacker
-		if ( not IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil )             then break end
-		if ( not IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
+		if ( not IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil ) then break end
+		if sentClass and ( not IsValid( newEnt ) or hook.Run( "PlayerSpawnedSENT", ply, newEnt ) ~= nil ) then break
+		elseif ( not IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
 
 		-- disabling this for now due to problems with ShouldCollide
 		--improvedstacker.MarkEntity( self:GetOwner(), newEnt )
@@ -775,7 +777,7 @@ function TOOL:LeftClick( tr, isRightClick )
 		table.insert( newEnts, newEnt )
 		
 		undo.AddEntity( newEnt )
-		ply:AddCleanup( "props", newEnt )
+		ply:AddCleanup( sentClass and "sents" or "props", newEnt )
 	end
 	
 	newEnts = nil
