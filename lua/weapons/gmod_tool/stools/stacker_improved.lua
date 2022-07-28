@@ -289,6 +289,7 @@ local cvarWeld         = CreateConVar( mode.."_force_weld",          oldWeld:Get
 local cvarNoCollide    = CreateConVar( mode.."_force_nocollide",     oldNoCollide:GetInt(),   cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
 local cvarNoCollideAll = CreateConVar( mode.."_force_nocollide_all", 0,                       cvarFlags,      "(EXPERIMENTAL, DISABLED) Determines whether props should be nocollide with everything except players, vehicles, and npcs" )
 local cvarStayInWorld  = CreateConVar( mode.."_force_stayinworld",   oldStayInWorld:GetInt(), cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
+local cvarAllowSents   = CreateConVar( mode.."_force_allow_sents",   0,                       cvarFlagsNotif, "Allow stacking of entities with .Stackable field" )
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -409,7 +410,11 @@ elseif ( SERVER ) then
 		if ( not validateCommand( ply, mode.."_set_delay", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_delay", args[1] )
 	end )
-
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( mode.."_set_force_allow_sents", function( ply, cmd, args )
+		if ( not validateCommand( ply, mode.."_set_force_allow_sents", args[1] ) ) then return false end
+		RunConsoleCommand( mode.."_force_allow_sents", tobool( args[1] ) and "1" or "0" )
+	end )
 	
 	util.AddNetworkString( mode.."_error" )
 
@@ -610,7 +615,17 @@ function TOOL:LeftClick( tr, isRightClick )
 		return false
 	end
 
-	if ( not IsValid( tr.Entity ) or tr.Entity:GetClass() ~= "prop_physics" ) then return false end
+	if not ( IsValid( tr.Entity ) ) then return false end
+
+	local isNotProp
+	if ( tr.Entity:GetClass() ~= "prop_physics" ) then
+		if ( tr.Entity.Stackable and cvarAllowSents:GetBool() ) then
+			isNotProp = true
+		else
+			return false
+		end
+	end
+
 	if ( CLIENT ) then return true end
 	
 	-- otherwise, stack 1 if right-clicking or get the client's stack size value
@@ -704,7 +719,13 @@ function TOOL:LeftClick( tr, isRightClick )
 		if ( stayInWorld and not util.IsInWorld( entPos ) ) then self:SendError( L(prefix.."error_not_in_world", localify.GetLocale( self:GetOwner() )) ) break end
 		
 		-- create the new stacked entity
-		newEnt = ents.Create( "prop_physics" )
+		if ( isNotProp ) then
+			local data = duplicator.CopyEntTable( ent )
+			newEnt = duplicator.CreateEntityFromTable( ply, data )
+		else
+			newEnt = ents.Create( "prop_physics" )
+		end
+
 		newEnt:SetModel( entMod )
 		newEnt:SetPos( entPos )
 		newEnt:SetAngles( entAng )
@@ -1521,6 +1542,7 @@ if ( CLIENT ) then
 					{ CVar = mode.."_force_weld",        CCmd = mode.."_set_force_weld" },
 					{ CVar = mode.."_force_nocollide",   CCmd = mode.."_set_force_nocollide" },
 					{ CVar = mode.."_force_stayinworld", CCmd = mode.."_set_force_stayinworld" },
+					{ CVar = mode.."_force_allow_sents", CCmd = mode.."_set_force_allow_sents" },
 				},
 			}
 			
@@ -1618,6 +1640,7 @@ if ( CLIENT ) then
 				"nocollide",
 				"nocollide_all",
 				"stayinworld",
+				"allow_sents",
 			}
 
 			local cblist = vgui.Create( "DListLayout", cpanel )
