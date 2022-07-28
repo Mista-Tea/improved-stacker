@@ -289,6 +289,7 @@ local cvarWeld         = CreateConVar( mode.."_force_weld",          oldWeld:Get
 local cvarNoCollide    = CreateConVar( mode.."_force_nocollide",     oldNoCollide:GetInt(),   cvarFlagsNotif, "Determines whether props should be forced to spawn nocollided or not" )
 local cvarNoCollideAll = CreateConVar( mode.."_force_nocollide_all", 0,                       cvarFlags,      "(EXPERIMENTAL, DISABLED) Determines whether props should be nocollide with everything except players, vehicles, and npcs" )
 local cvarStayInWorld  = CreateConVar( mode.."_force_stayinworld",   oldStayInWorld:GetInt(), cvarFlagsNotif, "Determines whether props should be restricted to spawning inside the world or not (addresses possible crashes)" )
+local cvarAllowSents   = CreateConVar( mode.."_force_allow_sents",   0,                       cvarFlagsNotif, "Allow stacking of entities with .Stackable field" )
 
 --[[--------------------------------------------------------------------------
 -- Console Commands
@@ -409,7 +410,11 @@ elseif ( SERVER ) then
 		if ( not validateCommand( ply, mode.."_set_delay", args[1] ) ) then return false end
 		RunConsoleCommand( mode.."_delay", args[1] )
 	end )
-
+	--[[-------------------------------------------------------------]]--
+	concommand.Add( mode.."_set_force_allow_sents", function( ply, cmd, args )
+		if ( not validateCommand( ply, mode.."_set_force_allow_sents", args[1] ) ) then return false end
+		RunConsoleCommand( mode.."_force_allow_sents", tobool( args[1] ) and "1" or "0" )
+	end )
 	
 	util.AddNetworkString( mode.."_error" )
 
@@ -610,7 +615,17 @@ function TOOL:LeftClick( tr, isRightClick )
 		return false
 	end
 
-	if ( not IsValid( tr.Entity ) or tr.Entity:GetClass() ~= "prop_physics" ) then return false end
+	if not ( IsValid( tr.Entity ) ) then return false end
+
+	local sentClass
+	if ( tr.Entity:GetClass() ~= "prop_physics" ) then
+		if ( tr.Entity.Stackable and cvarAllowSents:GetBool() ) then
+			sentClass = tr.Entity:GetClass()
+		else
+			return false
+		end
+	end
+
 	if ( CLIENT ) then return true end
 	
 	-- otherwise, stack 1 if right-clicking or get the client's stack size value
@@ -682,11 +697,12 @@ function TOOL:LeftClick( tr, isRightClick )
 		-- check if the player has too many active stacker props spawned out already
 		local stackerEntsSpawned = self:GetNumberPlayerEnts()
 		if ( maxPerPlayer >= 0 and stackerEntsSpawned >= maxPerPlayer ) then self:SendError( ("%s (%s)"):format(L(prefix.."error_max_per_player", localify.GetLocale( self:GetOwner() )), maxPerPlayer) ) break end
+
 		-- check if the player has exceeded the sbox_maxprops cvar
-		if ( not self:GetSWEP():CheckLimit( "props" ) )            then break end
+		if ( not self:GetSWEP():CheckLimit( sentClass and "sents" or "props" ) ) then break end
 		-- check if external admin mods are blocking this entity
-		if ( hook.Run( "PlayerSpawnProp", ply, entMod ) == false ) then break end
-		
+		if ( hook.Run( sentClass and "PlayerSpawnSENT" or "PlayerSpawnProp", ply, sentClass or entMod ) == false ) then break end
+
 		-- if we're positioning the first entity in the stack (regardless of relative to PROP or WORLD), or
 		-- if we're stacking relative to PROP and on the previous rotation, update the new direction and offset
 		if ( i == 1 or ( stackMode == improvedstacker.MODE_PROP and stackRelative ) ) then
@@ -704,7 +720,13 @@ function TOOL:LeftClick( tr, isRightClick )
 		if ( stayInWorld and not util.IsInWorld( entPos ) ) then self:SendError( L(prefix.."error_not_in_world", localify.GetLocale( self:GetOwner() )) ) break end
 		
 		-- create the new stacked entity
-		newEnt = ents.Create( "prop_physics" )
+		if ( sentClass ) then
+			local data = duplicator.CopyEntTable( ent )
+			newEnt = duplicator.CreateEntityFromTable( ply, data )
+		else
+			newEnt = ents.Create( "prop_physics" )
+		end
+
 		newEnt:SetModel( entMod )
 		newEnt:SetPos( entPos )
 		newEnt:SetAngles( entAng )
@@ -715,8 +737,9 @@ function TOOL:LeftClick( tr, isRightClick )
 		-- it is called before undo, ply:AddCount, and ply:AddCleanup to allow developers to
 		-- remove or mark this entity so that those same functions (if overridden) can
 		-- detect that the entity came from Stacker
-		if ( not IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil )             then break end
-		if ( not IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
+		if ( not IsValid( newEnt ) or hook.Run( "StackerEntity", newEnt, ply ) ~= nil ) then break end
+		if sentClass and ( not IsValid( newEnt ) or hook.Run( "PlayerSpawnedSENT", ply, newEnt ) ~= nil ) then break
+		elseif ( not IsValid( newEnt ) or hook.Run( "PlayerSpawnedProp", ply, entMod, newEnt ) ~= nil ) then break end
 
 		-- disabling this for now due to problems with ShouldCollide
 		--improvedstacker.MarkEntity( self:GetOwner(), newEnt )
@@ -754,7 +777,7 @@ function TOOL:LeftClick( tr, isRightClick )
 		table.insert( newEnts, newEnt )
 		
 		undo.AddEntity( newEnt )
-		ply:AddCleanup( "props", newEnt )
+		ply:AddCleanup( sentClass and "sents" or "props", newEnt )
 	end
 	
 	newEnts = nil
@@ -1521,6 +1544,7 @@ if ( CLIENT ) then
 					{ CVar = mode.."_force_weld",        CCmd = mode.."_set_force_weld" },
 					{ CVar = mode.."_force_nocollide",   CCmd = mode.."_set_force_nocollide" },
 					{ CVar = mode.."_force_stayinworld", CCmd = mode.."_set_force_stayinworld" },
+					{ CVar = mode.."_force_allow_sents", CCmd = mode.."_set_force_allow_sents" },
 				},
 			}
 			
@@ -1618,6 +1642,7 @@ if ( CLIENT ) then
 				"nocollide",
 				"nocollide_all",
 				"stayinworld",
+				"allow_sents",
 			}
 
 			local cblist = vgui.Create( "DListLayout", cpanel )

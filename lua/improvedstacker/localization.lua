@@ -73,6 +73,7 @@ localify.Bind( "en", prefix.."checkbox_axis",            "Draw XYZ axis" )
 localify.Bind( "en", prefix.."checkbox_axis_labels",     "Draw XYZ axis labels" )
 localify.Bind( "en", prefix.."checkbox_axis_angles",     "Draw XYZ axis angles" )
 localify.Bind( "en", prefix.."checkbox_stayinworld",     "Stay in world" )
+localify.Bind( "en", prefix.."checkbox_allow_sents",     "Allow Stackable Sents" )
 -- Comboboxes
 localify.Bind( "en", prefix.."combobox_world",           "World" )
 localify.Bind( "en", prefix.."combobox_prop",            "Prop" )
