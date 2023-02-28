@@ -44,7 +44,7 @@ languages = {
 	el        = "Greek",
 	["en-pt"] = "Pirate",
 	en        = "English",
-	es        = "Spanish",
+	["es-es"] = "Spanish",
 	et        = "Estonian",
 	fi        = "Finnish",
 	fr        = "French",
@@ -79,7 +79,7 @@ localizations = localizations or {
 	el        = {},
 	["en-pt"] = {},
 	en        = {},
-	es        = {},
+	["es-es"] = {},
 	et        = {},
 	fi        = {},
 	fr        = {},
@@ -103,7 +103,7 @@ localizations = localizations or {
 	uk        = {},
 	vi        = {},
 	["zh-cn"] = {},
-	["zh-tw"] = {},
+	["zh-tw"] = {}
 }
 
 --[[--------------------------------------------------------------------------
