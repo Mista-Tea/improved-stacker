@@ -646,7 +646,7 @@ function TOOL:LeftClick( tr, isRightClick )
 	local stayInWorld   = cvarStayInWorld:GetBool()
 
 	-- store the properties of the original prop so we can apply them to the stacked props
-	local ent = tr.Entity
+	local ent      = tr.Entity
 	local entPos   = ent:GetPos()
 	local entAng   = ent:GetAngles()
 	local entMod   = ent:GetModel()
@@ -662,9 +662,7 @@ function TOOL:LeftClick( tr, isRightClick )
 		RenderFX   = ent:GetRenderFX()
 	}	
 		
-	local newEnt
-	local newEnts = { ent }
-	local lastEnt = ent
+	local newEnts, lastEnt, newEnt = { ent }, ent, nil
 	
 	local direction, offset
 	-- we only need to calculate the distance once based on the direction the user selected
@@ -874,7 +872,7 @@ end
 --	Attempts to weld the new entity to the last entity.
 --]]--
 function TOOL:ApplyWeld( lastEnt, newEnt )
-	if ( not self:ShouldForceWeld() and not self:ShouldApplyWeld() ) then return true end
+	if ( not ( self:ShouldForceWeld() or self:ShouldApplyWeld() ) ) then return true end
 	
 	local forceLimit    = 0
 	local isNocollided  = self:ShouldForceNoCollide() or self:ShouldApplyNoCollide()
@@ -897,7 +895,7 @@ end
 --	Attempts to nocollide the new entity to the last entity.
 --]]--
 function TOOL:ApplyNoCollide( lastEnt, newEnt )
-	if ( not self:ShouldForceNoCollide() and not self:ShouldApplyNoCollide() ) then return true end
+	if ( not ( self:ShouldForceNoCollide() or self:ShouldApplyNoCollide() ) ) then return true end
 	-- we can skip this function if the client is trying to weld -and- nocollide, because
 	-- constraint.Weld already has a nocollide parameter
 	if ( self:ShouldForceWeld() or self:ShouldApplyWeld() ) then return true end
