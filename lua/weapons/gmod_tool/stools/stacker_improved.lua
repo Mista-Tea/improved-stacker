@@ -217,7 +217,7 @@ if ( CLIENT ) then
 
 	language.Add( "tool."..mode..".name",         L(prefix.."name") )
 	language.Add( "tool."..mode..".desc",         L(prefix.."desc") )
-	language.Add( "tool."..mode..".0",            L(prefix.."0") )
+	--language.Add( "tool."..mode..".0",            L(prefix.."0") )
 	language.Add( "tool."..mode..".left",         L(prefix.."left") )
 	language.Add( "tool."..mode..".shift_left",   L(prefix.."shift_left") )
 	language.Add( "tool."..mode..".right",        L(prefix.."right") )
