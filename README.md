@@ -17,24 +17,26 @@
 ### Changelog:
 	- May 27th, 2014 :: Added to GitHub 
 	- May 28th, 2014 :: Added to Workshop 
-	- Jun 5th,  2014 :: Massive overhaul 
+	- Jun  5th, 2014 :: Massive overhaul 
 	- Jul 24th, 2014 :: Large update 
 	- Aug 12th, 2014 :: Optimizations 
 	- Jun 30th, 2015 :: Bug fixes/features 
 	- Jul 11th, 2015 :: Bug fixes 
 	- Oct 26th, 2015 :: Bug fixes
-	- Aug 3rd,  2016 :: Bug fixes
+	- Aug  3rd, 2016 :: Bug fixes
 	- Aug 31st, 2016 :: Bug fixes
-	- Sep 2nd,  2016 :: Added Bulgarian language support
+	- Sep  2nd, 2016 :: Added Bulgarian translation
 	- Sep 26th, 2017 :: Added ability to toggle use of SHIFT key with LMB/RMB
 	- Oct 27th, 2017 :: Small client optimization, reverted nocollide implementation back to original
-	- Apr 14th, 2018 :: Added French language support
-	- Oct 12th, 2018 :: Added Polish language support
-	- Jul 21st, 2019 :: Added Russian language support
-	- Jul 23rd, 2019 :: Added Simplified Chinese language support
+	- Apr 14th, 2018 :: Added French translation
+	- Oct 12th, 2018 :: Added Polish translation
+	- Jul 21st, 2019 :: Added Russian translation
+	- Jul 23rd, 2019 :: Added Simplified Chinese translation
 	- May 10th, 2020 :: Fixed unstable clientside ghosts caused by ents.CreateClientProp changes
 	- Jun 18th, 2020 :: Clientside performance improvement when tool is not selected
-	- Apr 30th, 2021 :: Added German language support
+	- Apr 30th, 2021 :: Added German translation
+	- Jul 30th, 2023 :: Fixed Chromium branch error, updated Localify library
+	- Oct 15th, 2023 :: Added Turkish translation
 
 ### Fixes:
 	- Prevented crash from players using very high X/Y/Z offset values.

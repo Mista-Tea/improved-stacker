@@ -9,6 +9,7 @@ localify.Bind( "pl",    prefix.."language_pl",    "Polski" )
 localify.Bind( "ru",    prefix.."language_ru",    "Русский" )
 localify.Bind( "zh-cn", prefix.."language_zh-cn", "简体中文" )
 localify.Bind( "de",    prefix.."language_de",    "Deutsch" )
+localify.Bind( "tr",    prefix.."language_tr",    "Türkçe" )
 
 --[[--------------------------------------------------------------------------
 -- English Localization
@@ -724,6 +725,108 @@ localify.Bind( "de", prefix.."warning_weld",             "Für DarkRP." )
 localify.Bind( "de", prefix.."warning_nocollide",        "Für DarkRP." )
 localify.Bind( "de", prefix.."warning_nocollide_all",    "ÄNDERE NICHTS, WÄHREND DER SERVER AUSGEFÜHRT WIRD. Dies verwendet den GM.ShouldCollide-Hook und ist experimentell. Es funktioniert und verhindert garantiert Abstürze von Stacker, muss aber noch weiter getestet werden." )
 
+--[[--------------------------------------------------------------------------
+-- Turkish Localization
+-- Big thanks to Matt (STEAM_0:1:241718138) for these translations!
+--------------------------------------------------------------------------]]--
+
+-- Tool Settings
+localify.Bind( "tr", prefix.."name",                     "Geliştirilmiş Yığıcı" )
+localify.Bind( "tr", prefix.."desc",                     "Kopyalanan nesneleri herhangi bir yönde kolayca yığın" )
+localify.Bind( "tr", prefix.."left",                     "Bir yığın oluştur" )
+localify.Bind( "tr", prefix.."shift_left",               "Yığın boyutunu artır" )
+localify.Bind( "tr", prefix.."right",                    "Tek bir nesne oluştur" )
+localify.Bind( "tr", prefix.."shift_right",              "Yığın boyutunu azalt" )
+localify.Bind( "tr", prefix.."reload",                   "Yığın yönünü değiştir" )
+localify.Bind( "tr", "Undone_stacker_improved",          "Yığınlanmış nesne(ler) geri alındı" )
+-- Errors                                              
+localify.Bind( "tr", prefix.."error_blocked_by_server",  "Sunucu bu konsol değişkenini değiştirmenizi engelledi" )
+localify.Bind( "tr", prefix.."error_not_admin",          "Bu konsol değişkenini değiştirmek için 'admin' kullanıcı grubunda olmanız gerekir" )
+localify.Bind( "tr", prefix.."error_invalid_argument",   "Geçerli bir sayı değeri girmelisiniz" )
+localify.Bind( "tr", prefix.."error_max_count",          "Bir kerede yığılabilecek maksimum nesne sayısı sınırlıdır" )
+localify.Bind( "tr", prefix.."error_too_quick",          "Yığınlayıcıyı çok hızlı kullanıyorsunuz" )
+localify.Bind( "tr", prefix.."error_max_total",          "Yığınlayıcı destek sınırına ulaşıldı" )
+localify.Bind( "tr", prefix.."error_not_in_world",       "Yığılmış nesneler dünya içinde oluşturulmalıdır" )
+localify.Bind( "tr", prefix.."error_max_constraints",    "Kısıtlama oluşturulamadı, büyük olasılıkla varlık yuvaları tükendi" )
+-- Labels                                              
+localify.Bind( "tr", prefix.."label_presets",            "Yığınlayıcı Ön Ayarları: " )
+localify.Bind( "tr", prefix.."label_relative",           "Göreceli yığın: " )
+localify.Bind( "tr", prefix.."label_direction",          "Yığın yönü: " )
+localify.Bind( "tr", prefix.."label_count",              "Yığın boyutu" )
+localify.Bind( "tr", prefix.."label_reset_offsets",      "Ofsetleri sıfırla" )
+localify.Bind( "tr", prefix.."label_reset_angles",       "Açıları sıfırla" )
+localify.Bind( "tr", prefix.."label_show_settings",      "Ayarları göstermek için tıklayın" )
+localify.Bind( "tr", prefix.."label_hide_settings",      "Ayarları gizlemek için tıklayın" )
+localify.Bind( "tr", prefix.."label_x",                  "X (-arka, +ön)" )
+localify.Bind( "tr", prefix.."label_y",                  "E (-sol, +sağ)" )
+localify.Bind( "tr", prefix.."label_z",                  "Z (-aşağı, +yukarı)" )
+localify.Bind( "tr", prefix.."label_pitch",              "Pitch (-aşağı, +yukarı)" )
+localify.Bind( "tr", prefix.."label_yaw",                "Yaw (-sol, +sağ)" )
+localify.Bind( "tr", prefix.."label_roll",               "Döndür (-sola, +sağa)" )
+localify.Bind( "tr", prefix.."label_language",           "Dil: Türkçe" )
+localify.Bind( "tr", prefix.."label_credits",            "Türkçeye Matt tarafından çevrilmiştir (STEAM_0:1:241718138)" )
+localify.Bind( "tr", prefix.."label_max_per_stack",      "Yığın boyutu" )
+localify.Bind( "tr", prefix.."label_max_per_player",     "Oyuncu başına nesne" )
+localify.Bind( "tr", prefix.."label_max_offsetx",        "Maksimum X ofseti" ) 
+localify.Bind( "tr", prefix.."label_max_offsety",        "Maksimum Y ofseti" )
+localify.Bind( "tr", prefix.."label_max_offsetz",        "Maksimum Z ofseti" )
+localify.Bind( "tr", prefix.."label_delay",              "Gecikme" )
+localify.Bind( "tr", prefix.."label_opacity",            "Opaklık" )
+-- Checkboxes                                          
+localify.Bind( "tr", prefix.."checkbox_freeze",          "Yığınlanmış nesneleri dondur" )
+localify.Bind( "tr", prefix.."checkbox_weld",            "Yığılmış nesneleri yapıştır" )
+localify.Bind( "tr", prefix.."checkbox_nocollide",       "Yığılmış nesnelerin birbirine çarpmasını engelle" )
+localify.Bind( "tr", prefix.."checkbox_nocollide_all",   "Yığılmış nesnelerin her şey ile çarpışmasını engelle" )
+localify.Bind( "tr", prefix.."checkbox_use_shift_key",   "SHIFT + sol/sağ tıklamayla yığın boyutunu değiştir" )
+localify.Bind( "tr", prefix.."checkbox_relative",        "Yeni rotasyona göre yığın" )
+localify.Bind( "tr", prefix.."checkbox_material",        "Materyali uygula" )
+localify.Bind( "tr", prefix.."checkbox_color",           "Renk uygula" )
+localify.Bind( "tr", prefix.."checkbox_physprop",        "Fiziksel özellikleri uygula" )
+localify.Bind( "tr", prefix.."checkbox_ghost",           "Yığındaki tüm nesneleri gizle" )
+localify.Bind( "tr", prefix.."checkbox_halo",            "Gizlenmiş nesnelere ışık halkası ekle" )
+localify.Bind( "tr", prefix.."checkbox_halo_color",      "Işık halkası rengi" )
+localify.Bind( "tr", prefix.."checkbox_axis",            "XYZ eksenini çiz" )
+localify.Bind( "tr", prefix.."checkbox_axis_labels",     "XYZ eksen etiketlerini çizin" )
+localify.Bind( "tr", prefix.."checkbox_axis_angles",     "XYZ eksen açılarını çiz" )
+localify.Bind( "tr", prefix.."checkbox_stayinworld",     "Dünyada kal" )
+-- Comboboxes                                          
+localify.Bind( "tr", prefix.."combobox_world",           "Dünya" )
+localify.Bind( "tr", prefix.."combobox_prop",            "Nesne" )
+localify.Bind( "tr", prefix.."combobox_direction_up",    "Yukarı" )
+localify.Bind( "tr", prefix.."combobox_direction_down",  "Aşağı" )
+localify.Bind( "tr", prefix.."combobox_direction_front", "Ön" )
+localify.Bind( "tr", prefix.."combobox_direction_back",  "Geri" )
+localify.Bind( "tr", prefix.."combobox_direction_right", "Sağ" )
+localify.Bind( "tr", prefix.."combobox_direction_left",  "Sol" )
+localify.Bind( "tr", prefix.."combobox_default",         "Varsayılan" )
+localify.Bind( "tr", prefix.."combobox_sandbox",         "Sandbox" )
+localify.Bind( "tr", prefix.."combobox_darkrp",          "DarkRP" )
+localify.Bind( "tr", prefix.."combobox_singleplayer",    "Tek oyuncu" )
+-- HUD                                                 
+localify.Bind( "tr", prefix.."hud_front",                "Ön" )
+localify.Bind( "tr", prefix.."hud_right",                "Sağ" )
+localify.Bind( "tr", prefix.."hud_up",                   "Yukarı" )
+-- Help                                                
+localify.Bind( "tr", prefix.."help_max_per_player",      "Her oyuncunun maksimum yığılmış nesnesi sınırlıdır." )
+localify.Bind( "tr", prefix.."help_max_per_stack",       "Yığın başına maksimum nesne (sol tıklama)." )
+localify.Bind( "tr", prefix.."help_delay",               "Her yığınlayıcı kullanımı arasındaki gecikme (saniye cinsinden) (sol/sağ tıklama)" )
+localify.Bind( "tr", prefix.."help_max_offsetx",         "Yığılmış nesneler arasındaki maksimum mesafe (X ekseni)." )
+localify.Bind( "tr", prefix.."help_max_offsety",         "Yığılmış nesneler arasındaki maksimum mesafe (Y ekseni)." )
+localify.Bind( "tr", prefix.."help_max_offsetz",         "Yığılmış nesneler arasındaki maksimum mesafe (Z ekseni)." )
+localify.Bind( "tr", prefix.."help_freeze",              "Yığılmış nesneler ortaya çıktığında donar." )
+localify.Bind( "tr", prefix.."help_weld",                "Yığılmış nesneler, ortaya çıktıklarında birbirine yapışır." )
+localify.Bind( "tr", prefix.."help_nocollide",           "Yığılmış nesneler diğer yığılmış nesnelerle çarpışmaz." )
+localify.Bind( "tr", prefix.."help_nocollide_all",       "Yığılmış nesneler oyuncular, NPC'ler, araçlar ve dünya dışında hiçbir şeyle çarpışmaz." )
+localify.Bind( "tr", prefix.."help_stayinworld",         "Yığınlanmış nesnelerin harita dışında oluşturulmasını önler." )
+-- Warnings                                            
+localify.Bind( "tr", prefix.."warning_max_per_player",   "Öncelikle Rol Yapma oyun modları için. Sandbox oyun modları için bu genellikle sınırsız olmalıdır (-1)." )
+localify.Bind( "tr", prefix.."warning_max_offsetx",      "Öncelikle Rol Yapma oyun modları için. Ne yaptığınızı bilmiyorsanız değişiklik yapmayın." )
+localify.Bind( "tr", prefix.."warning_max_offsety",      "Öncelikle Rol Yapma oyun modları için. Ne yaptığınızı bilmiyorsanız değişiklik yapmayın." )
+localify.Bind( "tr", prefix.."warning_max_offsetz",      "Öncelikle Rol Yapma oyun modları için. Ne yaptığınızı bilmiyorsanız değişiklik yapmayın." )
+localify.Bind( "tr", prefix.."warning_freeze",           "DarkRP için." )
+localify.Bind( "tr", prefix.."warning_weld",             "DarkRP için." )
+localify.Bind( "tr", prefix.."warning_nocollide",        "DarkRP için." )
+localify.Bind( "tr", prefix.."warning_nocollide_all",    "SUNUCU ÇALIŞIRKEN DEĞİŞTİRMEYİN. Bu, GM.ShouldCollide kancasını kullanır ve deneyseldir. Çalışır ve yığınlayıcıdan kaynaklanan çökmeleri durdurması garanti edilir, ancak daha fazla test yapılması gerekiyor." )
 
 --[[--------------------------------------------------------------------------
 -- <Other> Localization
@@ -831,5 +934,5 @@ localify.Bind( "", prefix.."warning_nocollide_all",    "" )
 -- Hopefully will add more with community/crowdsource support.
 
 -- If you are multi/bilingual, please consider helping me translate the phrases above into other languages.
--- Create an issue on the Github page ( https://github.com/Mista-Tea/improved-weight ) or
+-- Create an issue on the Github page ( https://github.com/Mista-Tea/improved-stacker ) or
 -- add me on Steam ( http://steamcommunity.com/profiles/76561198015280374 ). Thanks!
